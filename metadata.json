@@ -1,0 +1,6 @@
+{
+  "name": "BD Nurses Directory",
+  "description": "Shared cloud-backed directory for nurses and midwives in Bangladesh with registration, admin approvals, transfer requests, filtering, and printable reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
