@@ -11,8 +11,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 class NurseRepository {
-  private val rawUrl = BuildConfig.SUPABASE_URL.trim().trimEnd('/')
-  private val anonKey = BuildConfig.SUPABASE_ANON_KEY.trim()
+  private val rawUrl = BuildConfig.SUPABASE_URL.trim().trim('"', '\'').trim().trimEnd('/')
+  private val anonKey = BuildConfig.SUPABASE_ANON_KEY.trim().trim('"', '\'').trim()
 
   val isConfigured: Boolean
     get() =
@@ -106,6 +106,17 @@ class NurseRepository {
       Result.success(block())
     } catch (ce: CancellationException) {
       throw ce
+    } catch (he: retrofit2.HttpException) {
+      val body =
+        try {
+          he.response()?.errorBody()?.string()?.trim().orEmpty()
+        } catch (_: Exception) {
+          ""
+        }
+      val msg =
+        if (body.isNotBlank()) "HTTP ${he.code()}: $body"
+        else "HTTP ${he.code()} ${he.message()}"
+      Result.failure(IllegalStateException(msg, he))
     } catch (e: Exception) {
       Result.failure(e)
     }

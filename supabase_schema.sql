@@ -32,6 +32,10 @@ create table if not exists public.nurses (
   created_at timestamptz not null default now()
 );
 
+-- Grant API access to anon and authenticated roles
+grant usage on schema public to anon, authenticated;
+grant all on table public.nurses to anon, authenticated;
+
 -- Enable Row Level Security
 alter table public.nurses enable row level security;
 
