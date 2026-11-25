@@ -50,7 +50,9 @@ const toRow=d=>({phone:d.phone,role:d.role||"user",status:d.status||"pending",pw
 const fromRow=r=>({phone:r.phone,role:r.role,status:r.status,pw:r.pw,mustChange:r.must_change,category:r.category,name:r.name,father:r.father,mother:r.mother,dob:r.dob,prl:r.prl,joinDate:r.join_date,bnmc:r.bnmc,designation:r.designation,workplace:r.workplace,division:r.division,district:r.district,upazila:r.upazila,address:r.address,education:r.education,eduCat:r.edu_cat,eduSub:r.edu_sub,eduInfo:r.edu_info,email:r.email,photo:r.photo,pendingEdit:r.pending_edit,resetReq:r.reset_req,createdAt:r.created_at});
 
 async function sbFetch(path,opts={}){
- const res=await fetch(`${SUPABASE_URL.replace(/\/+$/,"")}/rest/v1/${path}`,{...opts,headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...(opts.headers||{})}});
+ const h={"apikey":SUPABASE_ANON_KEY,"Content-Type":"application/json",...(opts.headers||{})};
+ if(SUPABASE_ANON_KEY.startsWith("eyJ"))h["Authorization"]="Bearer "+SUPABASE_ANON_KEY;
+ const res=await fetch(`${SUPABASE_URL.replace(/\/+$/,"")}/rest/v1/${path}`,{...opts,headers:h});
  if(!res.ok)throw new Error(await res.text());
  const txt=await res.text();return txt?JSON.parse(txt):[];
 }

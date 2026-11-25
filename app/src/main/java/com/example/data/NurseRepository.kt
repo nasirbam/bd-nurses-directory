@@ -35,15 +35,16 @@ class NurseRepository {
         .readTimeout(20, TimeUnit.SECONDS)
         .writeTimeout(20, TimeUnit.SECONDS)
         .addInterceptor { chain ->
-          val req =
+          val builder =
             chain
               .request()
               .newBuilder()
               .addHeader("apikey", anonKey)
-              .addHeader("Authorization", "Bearer $anonKey")
               .addHeader("Content-Type", "application/json")
-              .build()
-          chain.proceed(req)
+          if (anonKey.startsWith("eyJ")) {
+            builder.addHeader("Authorization", "Bearer $anonKey")
+          }
+          chain.proceed(builder.build())
         }
         .addInterceptor(logging)
         .build()
