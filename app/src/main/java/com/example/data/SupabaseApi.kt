@@ -1,5 +1,6 @@
 package com.example.data
 
+import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -16,8 +17,9 @@ interface SupabaseApi {
 
   @Headers("Prefer: resolution=merge-duplicates,return=representation")
   @POST("rest/v1/nurses?on_conflict=phone")
-  suspend fun upsertNurse(@Body record: NurseRecord): List<NurseRecord>
+  suspend fun upsertNurse(@Body body: RequestBody): List<NurseRecord>
 
   @DELETE("rest/v1/nurses")
   suspend fun deleteNurse(@Query("phone") phoneEq: String)
 }
+

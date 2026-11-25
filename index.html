@@ -1,190 +1,1291 @@
 <!DOCTYPE html>
-<html lang="bn"><head><meta charset="utf-8">
+<html lang="bn">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>BD Nurses Directory</title>
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f8f7;--card:#fff;--tx:#17302b;--mu:#5d7770;--pr:#0f766e;--bd:#d5e3df;--er:#b42318}
-@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0e1a18;--card:#162623;--tx:#e6f2ef;--mu:#9bb5ae;--pr:#2dd4bf;--bd:#27423d;--er:#f97066}}
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#edf7f5;
+  --card:rgba(255,255,255,0.92);
+  --tx:#132a25;
+  --mu:#4e6b64;
+  --pr:#0f766e;
+  --pr-soft:#d9f1ec;
+  --bd:#cde2dd;
+  --er:#b42318;
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme=light]){
+    --bg:#0d1a18;
+    --card:rgba(20,38,34,0.93);
+    --tx:#e6f2ef;
+    --mu:#9bb5ae;
+    --pr:#2dd4bf;
+    --pr-soft:#183a34;
+    --bd:#27423d;
+    --er:#f97066;
+  }
+}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,"Noto Sans Bengali",sans-serif}
-header{background:var(--pr);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-header h1{font-size:18px;margin:0}header button{background:#fff3;color:#fff;border:0;padding:6px 10px;border-radius:8px;cursor:pointer}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  color:var(--tx);
+  font:15px/1.5 system-ui,"Noto Sans Bengali",sans-serif;
+  min-height:100vh;
+  background-color:var(--bg);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%230f766e' stroke-opacity='0.07' stroke-width='1.5'%3E%3Cpath d='M28 18v20M18 28h20'/%3E%3Ccircle cx='90' cy='30' r='9'/%3E%3Cpath d='M86 30h8M90 26v8'/%3E%3Cpath d='M18 90h10l5-10 8 20 6-10h12'/%3E%3Ccircle cx='92' cy='92' r='6'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(circle at 12% 10%, rgba(20,184,166,0.18), transparent 45%),
+    radial-gradient(circle at 88% 85%, rgba(14,116,144,0.16), transparent 45%),
+    linear-gradient(160deg, #effaf7 0%, #e4f4f1 55%, #eef7fb 100%);
+  background-attachment:fixed;
+}
+@media(prefers-color-scheme:dark){
+  body{
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%232dd4bf' stroke-opacity='0.06' stroke-width='1.5'%3E%3Cpath d='M28 18v20M18 28h20'/%3E%3Ccircle cx='90' cy='30' r='9'/%3E%3Cpath d='M18 90h10l5-10 8 20 6-10h12'/%3E%3C/g%3E%3C/svg%3E"),
+      linear-gradient(160deg, #0c1917 0%, #102421 100%);
+  }
+}
+header{
+  background:linear-gradient(90deg, #0b5e57, #0f766e);
+  color:#fff;
+  padding:12px 16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+}
+header h1{font-size:18px;margin:0}
+header button{
+  background:#fff3;
+  color:#fff;
+  border:0;
+  padding:6px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font:inherit;
+  font-size:13px;
+}
+.topbar-meta{
+  background:rgba(217,241,236,0.92);
+  color:#0f3d36;
+  border-bottom:1px solid var(--bd);
+  font-size:13px;
+}
+@media(prefers-color-scheme:dark){
+  .topbar-meta{background:rgba(20,44,40,0.94);color:#d6efea}
+}
+.clock-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  padding:5px 14px;
+  background:rgba(15,118,110,0.09);
+  font-weight:600;
+}
+.live-pill{
+  display:inline-block;
+  font-size:11px;
+  font-weight:700;
+  padding:1px 8px;
+  border-radius:99px;
+  background:#cbd5e1;
+  color:#1e293b;
+  margin-left:6px;
+}
+.live-pill.on{background:#0f766e;color:#fff}
+.ticker-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 14px;
+  overflow:hidden;
+}
+.news-badge{
+  flex:none;
+  background:var(--pr);
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  padding:2px 8px;
+  border-radius:6px;
+}
+.ticker-wrap{flex:1;overflow:hidden;white-space:nowrap}
+.ticker-text{
+  display:inline-block;
+  padding-left:100%;
+  animation:marquee 24s linear infinite;
+  font-weight:500;
+}
+.ticker-wrap:hover .ticker-text{animation-play-state:paused}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+
 main{max-width:760px;margin:0 auto;padding:14px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+.card{
+  background:var(--card);
+  backdrop-filter:blur(8px);
+  border:1px solid var(--bd);
+  border-radius:14px;
+  padding:15px;
+  margin-bottom:12px;
+  box-shadow:0 4px 14px rgba(15,118,110,0.06);
+}
 label{display:block;font-size:13px;color:var(--mu);margin:10px 0 3px}
-input,select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
-button.p{background:var(--pr);color:#fff;border:0;padding:11px 16px;border-radius:8px;font:inherit;margin-top:14px;width:100%;cursor:pointer}
-button.s{background:none;border:1px solid var(--pr);color:var(--pr);padding:8px 12px;border-radius:8px;font:inherit;width:100%;margin-top:8px;cursor:pointer}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.msg{color:var(--er);font-size:13px;margin-top:8px}
-.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--bd);margin-right:4px}
-.mu{color:var(--mu);font-size:13px}.tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
-.tabs button{flex:none;padding:8px 12px;border-radius:99px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer}
-.tabs .on{background:var(--pr);color:#fff;border-color:var(--pr)}
-.act{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}.act button{flex:1;min-width:80px;padding:8px;border-radius:8px;border:0;color:#fff;font:inherit;cursor:pointer}
-.note{background:var(--pr);color:#fff;border-radius:10px;padding:10px;margin-bottom:12px}
-#pa{display:none}#pv table{border-collapse:collapse;width:100%;font-size:12px}#pv th,#pv td{border:1px solid var(--bd);padding:4px 6px;text-align:left;white-space:nowrap}#pv th{background:var(--bd)}@media print{header,main{display:none!important}:root{padding:0}body{background:#fff}#pa{display:block;color:#000;background:#fff;font-family:system-ui,"Noto Sans Bengali",sans-serif}#pa table{border-collapse:collapse;width:100%;font-size:12px}#pa th,#pa td{border:1px solid #444;padding:4px 6px;text-align:left}#pa th{background:#e5e5e5}@page{size:A4 landscape;margin:10mm}}
-</style></head><body>
-<header><h1>🩺 BD Nurses Directory</h1><div id="hd"></div></header>
-<main id="app">লোড হচ্ছে…</main><div id="pa"></div>
+input,select,textarea{
+  width:100%;
+  padding:10px;
+  border:1px solid var(--bd);
+  border-radius:9px;
+  background:rgba(255,255,255,0.78);
+  color:var(--tx);
+  font:inherit;
+}
+@media(prefers-color-scheme:dark){
+  input,select,textarea{background:rgba(14,28,25,0.85)}
+}
+button.p{
+  background:var(--pr);
+  color:#fff;
+  border:0;
+  padding:11px 16px;
+  border-radius:9px;
+  font:inherit;
+  font-weight:600;
+  margin-top:12px;
+  width:100%;
+  cursor:pointer;
+}
+button.s{
+  background:none;
+  border:1px solid var(--pr);
+  color:var(--pr);
+  padding:9px 12px;
+  border-radius:9px;
+  font:inherit;
+  font-weight:500;
+  width:100%;
+  margin-top:8px;
+  cursor:pointer;
+}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:480px){.row{grid-template-columns:1fr}}
+.msg{color:var(--er);font-size:13px;margin-top:8px}
+.tag{
+  display:inline-block;
+  font-size:12px;
+  padding:2px 9px;
+  border-radius:99px;
+  background:var(--pr-soft);
+  color:var(--pr);
+  font-weight:600;
+  margin:2px 4px 2px 0;
+}
+.mu{color:var(--mu);font-size:13px}
+.tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px}
+.tabs button{
+  flex:none;
+  padding:8px 14px;
+  border-radius:99px;
+  border:1px solid var(--bd);
+  background:var(--card);
+  color:var(--tx);
+  cursor:pointer;
+  font:inherit;
+  font-size:14px;
+}
+.tabs .on{background:var(--pr);color:#fff;border-color:var(--pr);font-weight:600}
+.act{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.act button{
+  flex:1;
+  min-width:85px;
+  padding:9px;
+  border-radius:9px;
+  border:0;
+  color:#fff;
+  font:inherit;
+  font-weight:600;
+  cursor:pointer;
+}
+.note{background:var(--pr);color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:500}
+.avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--bd)}
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.48);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  z-index:1000;
+}
+.modal-box{
+  max-width:420px;
+  width:100%;
+  background:var(--card);
+  border:1px solid var(--bd);
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 16px 40px rgba(0,0,0,0.22);
+}
+#pa{display:none}
+#pv table{border-collapse:collapse;width:100%;font-size:12px}
+#pv th,#pv td{border:1px solid var(--bd);padding:4px 6px;text-align:left;white-space:nowrap}
+#pv th{background:var(--bd)}
+@media print{
+  header,.topbar-meta,main,.modal-backdrop{display:none!important}
+  :root{padding:0}
+  body{background:#fff!important}
+  #pa{display:block;color:#000;background:#fff;font-family:system-ui,"Noto Sans Bengali",sans-serif}
+  #pa table{border-collapse:collapse;width:100%;font-size:12px}
+  #pa th,#pa td{border:1px solid #444;padding:4px 6px;text-align:left}
+  #pa th{background:#e5e5e5}
+  @page{size:A4 landscape;margin:10mm}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🩺 BD Nurses Directory</h1>
+  <div id="hd"></div>
+</header>
+<div class="topbar-meta">
+  <div class="clock-row">
+    <div>🕒 <span id="clk">--:--:-- (24H)</span><span id="liveBadge" class="live-pill">AUTO SYNC</span></div>
+    <div id="dt">--</div>
+  </div>
+  <div class="ticker-row">
+    <span class="news-badge">NEWS</span>
+    <div class="ticker-wrap"><span id="tickerText" class="ticker-text">🩺 BD Nurses Directory-তে স্বাগতম — নতুন নিবন্ধন ও তথ্য পরিবর্তনের জন্য অনুগ্রহ করে সঠিক তথ্য প্রদান করুন।</span></div>
+  </div>
+</div>
+<main id="app">লোড হচ্ছে…</main>
+<div id="modalRoot"></div>
+<div id="pa"></div>
+
 <script>
-// Live Server Deployment Config: Replace with your Supabase Project URL and Anon Key
 const SUPABASE_URL = "https://ozcarfrsobevakjqsheu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96Y2FyZnJzb2JldmFranFzaGV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU2MjUwNjYsImV4cCI6MjExMTIwMTA2Nn0.5IV1s9tWPO1jRaE03OBuq3LKn_JWSox8eZVEl8PgAQY";
+const DEFAULT_TICKER = "🩺 BD Nurses Directory-তে স্বাগতম — নতুন নিবন্ধন ও তথ্য পরিবর্তনের জন্য অনুগ্রহ করে সঠিক তথ্য প্রদান করুন।";
 
-const DIV={"Dhaka":["Dhaka","Gazipur","Narayanganj","Narsingdi","Manikganj","Munshiganj","Tangail","Kishoreganj","Faridpur","Gopalganj","Madaripur","Rajbari","Shariatpur"],
-"Chattogram":["Chattogram","Cox's Bazar","Cumilla","Feni","Brahmanbaria","Noakhali","Lakshmipur","Chandpur","Rangamati","Khagrachhari","Bandarban"],
-"Rajshahi":["Rajshahi","Bogura","Pabna","Sirajganj","Natore","Naogaon","Chapainawabganj","Joypurhat"],
-"Khulna":["Khulna","Jashore","Satkhira","Bagerhat","Narail","Magura","Jhenaidah","Kushtia","Chuadanga","Meherpur"],
-"Barishal":["Barishal","Bhola","Patuakhali","Pirojpur","Jhalokati","Barguna"],
-"Sylhet":["Sylhet","Moulvibazar","Habiganj","Sunamganj"],
-"Rangpur":["Rangpur","Dinajpur","Kurigram","Gaibandha","Nilphamari","Lalmonirhat","Thakurgaon","Panchagarh"],
-"Mymensingh":["Mymensingh","Jamalpur","Sherpur","Netrokona"]};
-const UPA={"Dhaka":["Savar","Dhamrai","Keraniganj","Nawabganj","Dohar","Dhaka Metro (Thana)"],"Gazipur":["Gazipur Sadar","Kaliakair","Kapasia","Sreepur","Kaliganj"],"Chattogram":["Hathazari","Raozan","Sitakunda","Patiya","Chattogram Metro (Thana)"],"Rajshahi":["Paba","Godagari","Mohanpur","Rajshahi Metro (Thana)"],"Khulna":["Dumuria","Batiaghata","Dacope","Khulna Metro (Thana)"],"Sylhet":["Sylhet Sadar","Beanibazar","Jaintiapur","Golapganj"],"Rangpur":["Rangpur Sadar","Mithapukur","Badarganj","Pirganj"],"Barishal":["Barishal Sadar","Bakerganj","Babuganj","Gournadi"],"Mymensingh":["Mymensingh Sadar","Trishal","Muktagachha","Phulpur"]};
-const CAT={"Govt. Nurse/Midwife":["Senior Staff Nurse","Staff Nurse","Midwife","Nursing Instructor","Lecturer","Principal"],"Non-Govt. Nurse/Midwife":["Senior Staff Nurse","Staff Nurse","Midwife","Nursing Instructor","Lecturer","Principal"],"Student Nurse/Midwife":["Student Nurse","Student Midwife"]};
-const EDU=["Diploma in Nursing Science & Midwifery","Diploma in Midwifery","B.Sc in Nursing","Post Basic B.Sc in Nursing","B.Sc in Public Health Nursing","M.Sc in Nursing","Other"];
-const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const H=async s=>[...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode("ndbd:"+s)))].map(b=>b.toString(16).padStart(2,"0")).join("");
-let all=[],me=null,tab="dir",msg="",view="login",editing=null,note="";
-
-const toRow=d=>({phone:d.phone,role:d.role||"user",status:d.status||"pending",pw:d.pw,must_change:!!d.mustChange,category:d.category||"",name:d.name||"",father:d.father||"",mother:d.mother||"",dob:d.dob||"",prl:d.prl||"",join_date:d.joinDate||"",bnmc:d.bnmc||"",designation:d.designation||"",workplace:d.workplace||"",division:d.division||"",district:d.district||"",upazila:d.upazila||"",address:d.address||"",education:d.education||"",edu_cat:d.eduCat||"",edu_sub:d.eduSub||"",edu_info:d.eduInfo||"",email:d.email||"",photo:d.photo||null,pending_edit:d.pendingEdit||null,reset_req:d.resetReq||null,created_at:d.createdAt||new Date().toISOString()});
-const fromRow=r=>({phone:r.phone,role:r.role,status:r.status,pw:r.pw,mustChange:r.must_change,category:r.category,name:r.name,father:r.father,mother:r.mother,dob:r.dob,prl:r.prl,joinDate:r.join_date,bnmc:r.bnmc,designation:r.designation,workplace:r.workplace,division:r.division,district:r.district,upazila:r.upazila,address:r.address,education:r.education,eduCat:r.edu_cat,eduSub:r.edu_sub,eduInfo:r.edu_info,email:r.email,photo:r.photo,pendingEdit:r.pending_edit,resetReq:r.reset_req,createdAt:r.created_at});
-
-async function sbFetch(path,opts={}){
- const h={"apikey":SUPABASE_ANON_KEY,"Content-Type":"application/json",...(opts.headers||{})};
- if(SUPABASE_ANON_KEY.startsWith("eyJ"))h["Authorization"]="Bearer "+SUPABASE_ANON_KEY;
- const res=await fetch(`${SUPABASE_URL.replace(/\/+$/,"")}/rest/v1/${path}`,{...opts,headers:h});
- if(!res.ok)throw new Error(await res.text());
- const txt=await res.text();return txt?JSON.parse(txt):[];
-}
-const store={
- load:async()=>{const rows=await sbFetch("nurses?select=*");all=rows.map(fromRow);},
- set:async(id,d)=>{await sbFetch("nurses?on_conflict=phone",{method:"POST",headers:{"Prefer":"resolution=merge-duplicates,return=representation"},body:JSON.stringify(toRow({...d,phone:id}))});await store.load();draw();},
- del:async id=>{await sbFetch(`nurses?phone=eq.${encodeURIComponent(id)}`,{method:"DELETE"});await store.load();draw();}
+const DIV = {
+  "Dhaka":["Dhaka","Gazipur","Narayanganj","Narsingdi","Manikganj","Munshiganj","Tangail","Kishoreganj","Faridpur","Gopalganj","Madaripur","Rajbari","Shariatpur"],
+  "Chattogram":["Chattogram","Cox's Bazar","Cumilla","Feni","Brahmanbaria","Noakhali","Lakshmipur","Chandpur","Rangamati","Khagrachhari","Bandarban"],
+  "Rajshahi":["Rajshahi","Bogura","Pabna","Sirajganj","Natore","Naogaon","Chapainawabganj","Joypurhat"],
+  "Khulna":["Khulna","Jashore","Satkhira","Bagerhat","Narail","Magura","Jhenaidah","Kushtia","Chuadanga","Meherpur"],
+  "Barishal":["Barishal","Bhola","Patuakhali","Pirojpur","Jhalokati","Barguna"],
+  "Sylhet":["Sylhet","Moulvibazar","Habiganj","Sunamganj"],
+  "Rangpur":["Rangpur","Dinajpur","Kurigram","Gaibandha","Nilphamari","Lalmonirhat","Thakurgaon","Panchagarh"],
+  "Mymensingh":["Mymensingh","Jamalpur","Sherpur","Netrokona"]
 };
-async function init(){
- if(!SUPABASE_URL||SUPABASE_URL.includes("YOUR_SUPABASE")){
-  $("#app").innerHTML=`<div class="card"><h3>⚠️ Supabase Configuration Required</h3><p class="mu">index.html ফাইলে SUPABASE_URL এবং SUPABASE_ANON_KEY সেট করুন এবং supabase_schema.sql রান করুন।</p></div>`;return;
- }
- try{await store.load();await ensureAdmin();draw();setInterval(async()=>{if(me&&!editing){try{await store.load();draw()}catch(e){}}},15000)}
- catch(e){$("#app").innerHTML=`<div class="card"><h3>Connection Error</h3><p class="msg">${esc(e.message)}</p></div>`}
+
+const UPA = {
+  "Dhaka":["Dhamrai","Dohar","Keraniganj","Nawabganj","Savar","Dhaka Metro (Thana)","Dhanmondi","Gulshan","Mirpur","Mohammadpur","Motijheel","Shahbagh","Tejgaon","Uttara"],
+  "Gazipur":["Gazipur Sadar","Kaliakair","Kaliganj","Kapasia","Sreepur","Tongi"],
+  "Narayanganj":["Araihazar","Bandar","Narayanganj Sadar","Rupganj","Sonargaon","Fatullah","Siddhirganj"],
+  "Narsingdi":["Belabo","Monohardi","Narsingdi Sadar","Palash","Raipura","Shibpur"],
+  "Manikganj":["Daulatpur","Ghior","Harirampur","Manikganj Sadar","Saturia","Shivalaya","Singair"],
+  "Munshiganj":["Gazaria","Lohajang","Munshiganj Sadar","Sirajdikhan","Sreenagar","Tongibari"],
+  "Tangail":["Basail","Bhuapur","Delduar","Dhanbari","Ghatail","Gopalpur","Kalihati","Madhupur","Mirzapur","Nagarpur","Sakhipur","Tangail Sadar"],
+  "Kishoreganj":["Austagram","Bajitpur","Bhairab","Hossainpur","Itna","Karimganj","Katiadi","Kishoreganj Sadar","Kuliarchar","Mithamain","Nikli","Pakundia","Tarail"],
+  "Faridpur":["Alfadanga","Bhanga","Boalmari","Charbhadrasan","Faridpur Sadar","Madhukhali","Nagarkanda","Sadarpur","Saltha"],
+  "Gopalganj":["Gopalganj Sadar","Kashiani","Kotalipara","Muksudpur","Tungipara"],
+  "Madaripur":["Dasar","Kalkini","Madaripur Sadar","Rajoir","Shibchar"],
+  "Rajbari":["Baliakandi","Goalandaghat","Kalukhali","Pangsha","Rajbari Sadar"],
+  "Shariatpur":["Bhedarganj","Damudya","Gosairhat","Naria","Shariatpur Sadar","Zajira"],
+
+  "Chattogram":["Anwara","Banshkhali","Boalkhali","Chandanaish","Fatikchhari","Hathazari","Karnaphuli","Lohagara","Mirsharai","Patiya","Rangunia","Raozan","Sandwip","Satkania","Sitakunda","Chattogram Metro (Thana)"],
+  "Cox's Bazar":["Chakaria","Cox's Bazar Sadar","Eidgaon","Kutubdia","Maheshkhali","Pekua","Ramu","Teknaf","Ukhia"],
+  "Cumilla":["Barura","Brahmanpara","Burichang","Chandina","Chauddagram","Cumilla Adarsha Sadar","Cumilla Sadar Dakshin","Daudkandi","Debidwar","Homna","Laksam","Lalmai","Meghna","Monohorgonj","Muradnagar","Nangalkot","Titas"],
+  "Feni":["Chhagalnaiya","Daganbhuiyan","Feni Sadar","Fulgazi","Parshuram","Sonagazi"],
+  "Brahmanbaria":["Akhaura","Ashuganj","Bancharampur","Bijoynagar","Brahmanbaria Sadar","Kasba","Nabinagar","Nasirnagar","Sarail"],
+  "Noakhali":["Begumganj","Chatkhil","Companiganj","Hatiya","Kabirhat","Noakhali Sadar","Senbagh","Sonaimuri","Subarnachar"],
+  "Lakshmipur":["Kamalnagar","Lakshmipur Sadar","Raipur","Ramganj","Ramgati"],
+  "Chandpur":["Chandpur Sadar","Faridganj","Haimchar","Haziganj","Kachua","Matlab Dakshin","Matlab Uttar","Shahrasti"],
+  "Rangamati":["Baghaichhari","Barkal","Belaichhari","Juraichhari","Kaptai","Kawkhali","Langadu","Naniarchar","Rajasthali","Rangamati Sadar"],
+  "Khagrachhari":["Dighinala","Guimara","Khagrachhari Sadar","Lakshmichhari","Mahalchhari","Manikchhari","Matiranga","Panchhari","Ramgarh"],
+  "Bandarban":["Alikadam","Bandarban Sadar","Lama","Naikhongchhari","Rowangchhari","Ruma","Thanchi"],
+
+  "Rajshahi":["Bagha","Bagmara","Charghat","Durgapur","Godagari","Mohanpur","Paba","Puthia","Tanore","Rajshahi Metro (Thana)"],
+  "Bogura":["Adamdighi","Bogura Sadar","Dhunat","Dhupchanchia","Gabtali","Kahaloo","Nandigram","Sariakandi","Shajahanpur","Sherpur","Shibganj","Sonatala"],
+  "Pabna":["Atgharia","Bera","Bhangura","Chatmohar","Faridpur","Ishwardi","Pabna Sadar","Santhia","Sujanagar"],
+  "Sirajganj":["Belkuchi","Chauhali","Kamarkhanda","Kazipur","Raiganj","Shahjadpur","Sirajganj Sadar","Tarash","Ullahpara"],
+  "Natore":["Bagatipara","Baraigram","Gurudaspur","Lalpur","Naldanga","Natore Sadar","Singra"],
+  "Naogaon":["Atrai","Badalgachhi","Dhamoirhat","Manda","Mohadevpur","Naogaon Sadar","Niamatpur","Patnitala","Porsha","Raninagar","Sapahar"],
+  "Chapainawabganj":["Bholahat","Chapainawabganj Sadar","Gomastapur","Nachole","Shibganj"],
+  "Joypurhat":["Akkelpur","Joypurhat Sadar","Kalai","Khetlal","Panchbibi"],
+
+  "Khulna":["Batiaghata","Dacope","Dighalia","Dumuria","Koyra","Paikgachha","Phultala","Rupsha","Terokhada","Khulna Metro (Thana)"],
+  "Jashore":["Abhaynagar","Bagherpara","Chaugachha","Jashore Sadar","Jhikargachha","Keshabpur","Manirampur","Sharsha"],
+  "Satkhira":["Assasuni","Debhata","Kalaroa","Kaliganj","Satkhira Sadar","Shyamnagar","Tala"],
+  "Bagerhat":["Bagerhat Sadar","Chitalmari","Fakirhat","Kachua","Mollahat","Mongla","Morrelganj","Rampal","Sarankhola"],
+  "Narail":["Kalia","Lohagara","Narail Sadar"],
+  "Magura":["Magura Sadar","Mohammadpur","Shalikha","Sreepur"],
+  "Jhenaidah":["Harinakunda","Jhenaidah Sadar","Kaliganj","Kotchandpur","Maheshpur","Shailkupa"],
+  "Kushtia":["Bheramara","Daulatpur","Khoksa","Kumarkhali","Kushtia Sadar","Mirpur"],
+  "Chuadanga":["Alamdanga","Chuadanga Sadar","Damurhuda","Jibannagar"],
+  "Meherpur":["Gangni","Meherpur Sadar","Mujibnagar"],
+
+  "Barishal":["Agailjhara","Babuganj","Bakerganj","Banaripara","Barishal Sadar","Gaurnadi","Hizla","Mehendiganj","Muladi","Wazirpur","Barishal Metro (Thana)"],
+  "Bhola":["Bhola Sadar","Borhanuddin","Char Fasson","Daulatkhan","Lalmohan","Manpura","Tazumuddin"],
+  "Patuakhali":["Bauphal","Dashmina","Dumki","Galachipa","Kalapara","Mirzaganj","Patuakhali Sadar","Rangabali"],
+  "Pirojpur":["Bhandaria","Indurkani","Kawkhali","Mathbaria","Nazirpur","Nesarabad (Swarupkathi)","Pirojpur Sadar"],
+  "Jhalokati":["Jhalokati Sadar","Kathalia","Nalchity","Rajapur"],
+  "Barguna":["Amtali","Bamna","Barguna Sadar","Betagi","Patharghata","Taltali"],
+
+  "Sylhet":["Balaganj","Beanibazar","Bishwanath","Companiganj","Dakshin Surma","Fenchuganj","Golapganj","Gowainghat","Jaintiapur","Kanaighat","Osmani Nagar","Sylhet Sadar","Zakiganj","Sylhet Metro (Thana)"],
+  "Moulvibazar":["Barlekha","Juri","Kamalganj","Kulaura","Moulvibazar Sadar","Rajnagar","Sreemangal"],
+  "Habiganj":["Ajmiriganj","Bahubal","Baniyachong","Chunarughat","Habiganj Sadar","Lakhai","Madhabpur","Nabiganj","Shayestaganj"],
+  "Sunamganj":["Bishwamvarpur","Chhatak","Derai","Dharamapasha","Dowarabazar","Jagannathpur","Jamalganj","Madhyanagar","Shalla","Shantiganj","Sunamganj Sadar","Tahirpur"],
+
+  "Rangpur":["Badarganj","Gangachhara","Kaunia","Mithapukur","Pirgachha","Pirganj","Rangpur Sadar","Taraganj","Rangpur Metro (Thana)"],
+  "Dinajpur":["Birampur","Birganj","Biral","Bochaganj","Chirirbandar","Dinajpur Sadar","Fulbari","Ghoraghat","Hakimpur","Kaharole","Khansama","Nawabganj","Parbatipur"],
+  "Kurigram":["Bhurungamari","Char Rajibpur","Chilmari","Kurigram Sadar","Nageshwari","Phulbari","Rajarhat","Raomari","Ulipur"],
+  "Gaibandha":["Fulchhari","Gaibandha Sadar","Gobindaganj","Palashbari","Sadullapur","Saghata","Sundarganj"],
+  "Nilphamari":["Dimla","Domar","Jaldhaka","Kishoreganj","Nilphamari Sadar","Saidpur"],
+  "Lalmonirhat":["Aditmari","Hatibandha","Kaliganj","Lalmonirhat Sadar","Patgram"],
+  "Thakurgaon":["Baliadangi","Haripur","Pirganj","Ranisankail","Thakurgaon Sadar"],
+  "Panchagarh":["Atwari","Boda","Debiganj","Panchagarh Sadar","Tetulia"],
+
+  "Mymensingh":["Bhaluka","Dhobaura","Fulbaria","Gafargaon","Gauripur","Haluaghat","Ishwarganj","Muktagachha","Mymensingh Sadar","Nandail","Phulpur","Tara Khanda","Trishal","Mymensingh Metro (Thana)"],
+  "Jamalpur":["Bakshiganj","Dewanganj","Islampur","Jamalpur Sadar","Madarganj","Melandaha","Sarishabari"],
+  "Sherpur":["Jhenaigati","Nakla","Nalitabari","Sherpur Sadar","Sreebardi"],
+  "Netrokona":["Atpara","Barhatta","Durgapur","Kalmakanda","Kendua","Khaliajuri","Madan","Mohanganj","Netrokona Sadar","Purbadhala"]
+};
+
+const CAT = {
+  "Govt. Nurse/Midwife":["Senior Staff Nurse","Staff Nurse","Midwife","Nursing Instructor","Lecturer","Principal"],
+  "Non-Govt. Nurse/Midwife":["Senior Staff Nurse","Staff Nurse","Midwife","Nursing Instructor","Lecturer","Principal"],
+  "Student Nurse/Midwife":["Student Nurse","Student Midwife"]
+};
+const EDU = ["Diploma in Nursing Science & Midwifery","Diploma in Midwifery","B.Sc in Nursing","Post Basic B.Sc in Nursing","B.Sc in Public Health Nursing","M.Sc in Nursing","Other"];
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const H = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("ndbd:" + s)))].map(b => b.toString(16).padStart(2, "0")).join("");
+
+let all = [], me = null, tab = "dir", msg = "", view = "login", editing = null, addingByManager = false, note = "";
+let formPhoto = null, showPwPrompt = false, recSent = false, recPhone = "", recMaskedEmail = "";
+let editingMgrId = null, rtConnected = false, ws = null, hbTimer = null, syncInFlight = false;
+const unsupportedCols = new Set();
+
+function startClock() {
+  const tick = () => {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
+    const elClk = $("#clk"), elDt = $("#dt");
+    if (elClk) elClk.textContent = `${hh}:${mm}:${ss} (24H)`;
+    if (elDt) elDt.textContent = now.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
+  };
+  tick();
+  setInterval(tick, 1000);
 }
-let adminMade=false;
-async function ensureAdmin(){if(adminMade)return;if(all.some(x=>x.role=="admin")){adminMade=true;return}adminMade=true;
- await store.set("admin",{phone:"admin",role:"admin",name:"Administrator",pw:await H("admin123"),mustChange:true,status:"approved"})}
-const prl=d=>{if(!d)return"";const x=new Date(d);x.setFullYear(x.getFullYear()+59);return x.toLocaleDateString("en-GB",{day:"2-digit",month:"long",year:"numeric"})};
-function draw(){
- $("#hd").innerHTML=me?`<span style="color:#fff">${esc(me.name)}</span> <button onclick="out()">Logout</button>`:(view=="admin"?"":`<button onclick="view='admin';msg='';draw()">🔐 Admin Login</button>`);
- if(!me){if(view!="register"&&view!="admin"&&view!="forgot")view="login";$("#app").innerHTML=view=="register"?regForm():view=="admin"?adminForm():view=="forgot"?forgotForm():loginForm();return}
- const cur=all.find(x=>x.phone==me.phone);if(cur)me=cur;
- if(me.mustChange&&!skipPw){$("#app").innerHTML=pwForm(true);return}
- const adm=me.role=="admin",pend=all.filter(x=>x.role=="user"&&(x.status=="pending"||x.pendingEdit||x.resetReq)).length,n=note;note="";
- const T=(k,l)=>`<button class="${tab==k&&!editing?"on":""}" onclick="tab='${k}';editing=null;msg='';draw()">${l}</button>`;
- let t=`<div class="tabs">${T("dir","Directory")}${adm?T("pend","Requests ("+pend+")")+T("all","All Users"):T("me","My Profile")}${T("pw","Password")}</div>`+(n?`<div class="note">${esc(n)}</div>`:"")+(me.mustChange?`<div class="note" style="background:#b45309">⚠️ আপনি এখনো default password ব্যবহার করছেন। Password tab থেকে বদলে নিন।</div>`:"");
- let body=editing?regForm(true):tab=="dir"?dirView():tab=="pend"&&adm?pendView():tab=="all"&&adm?allView():tab=="me"?meView():tab=="pw"?pwForm(false):"";
- $("#app").innerHTML=t+body;
- if(editing){const u=all.find(x=>x.phone==editing);if(u)fill(u)}else if(tab=="dir")filt();
+
+function updateLiveBadge() {
+  const b = $("#liveBadge");
+  if (!b) return;
+  b.textContent = rtConnected ? "● LIVE" : "AUTO SYNC";
+  b.classList.toggle("on", rtConnected);
 }
-function loginForm(){return`<div class="card"><h3>Login</h3><label>Phone number (User ID)</label><input id="lp" inputmode="tel" placeholder="01XXXXXXXXX"><label>Password</label><input id="lw" type="password" onkeydown="event.key=='Enter'&&login()"><button class="p" onclick="login()">Login</button><div class="msg">${esc(msg)}</div><button class="s" onclick="view='forgot';msg='';draw()">Password ভুলে গেছেন?</button><button class="s" onclick="view='register';msg='';draw()">Register (নতুন নিবন্ধন)</button></div>`}
-function adminForm(){return`<div class="card"><h3>🔐 Admin Panel Login</h3><label>Admin ID</label><input id="ap" autocomplete="off"><label>Password</label><input id="aw" type="password" onkeydown="event.key=='Enter'&&adminLogin()"><button class="p" onclick="adminLogin()">Login as Admin</button><div class="msg">${esc(msg)}</div><button class="s" onclick="view='login';msg='';draw()">Back</button></div>`}
-function forgotForm(){return`<div class="card"><h3>Password Reset Request</h3><p class="mu">আপনার নিবন্ধিত Phone নম্বর দিন। Admin অনুরোধ approve করলে password reset হবে এবং আপনি নতুন password সেট করতে পারবেন।</p><label>Phone number</label><input id="fp" inputmode="tel" placeholder="01XXXXXXXXX"><button class="p" onclick="sendReset()">Admin কে অনুরোধ পাঠান</button><div class="msg" style="${msg.startsWith('✅')?'color:var(--pr)':''}">${esc(msg)}</div><button class="s" onclick="view='login';msg='';draw()">Back to Login</button></div>`}
-async function sendReset(){const p=$("#fp").value.trim(),u=all.find(x=>x.phone==p&&x.role=="user"&&x.status=="approved");
- if(!u){msg="এই নম্বরে কোনো approved account পাওয়া যায়নি";return draw()}
- await store.set(p,{...u,resetReq:{at:new Date().toISOString()}});msg="✅ অনুরোধ Admin এর কাছে পাঠানো হয়েছে। Approve হলে আবার login করুন।";draw()}
-async function adminLogin(){const p=$("#ap").value.trim(),pw=$("#aw").value;let u=all.find(x=>x.role=="admin"&&x.phone==p);
- if(!u&&p=="admin"&&pw=="admin123"){u={phone:"admin",role:"admin",name:"Administrator",pw:await H("admin123"),mustChange:true,status:"approved"};await store.set("admin",u)}
- if(!u||u.pw!==await H(pw)){msg="Admin ID বা Password ভুল";return draw()}
- msg="";me=u;tab="pend";draw()}
-async function login(){const p=$("#lp").value.trim(),w=await H($("#lw").value),u=all.find(x=>x.phone==p&&x.role=="user");
- if(!u||u.pw!==w){msg="Phone বা Password ভুল";return draw()}
- if(u.status=="pending"){msg="আপনার আবেদন এখনো Admin approval এর অপেক্ষায়";return draw()}
- if(u.status=="rejected"){msg="আপনার আবেদন বাতিল করা হয়েছে";return draw()}
- msg="";me=u;tab="dir";draw()}
-function out(){skipPw=false;me=null;editing=null;view="login";draw()}
-const opt=(a,ph)=>`<option value="">${ph}</option>`+a.map(x=>`<option>${esc(x)}</option>`).join("");
-function regForm(ed){const adm=me&&me.role=="admin";return`<div class="card"><h3>${ed?(adm?"তথ্য সম্পাদনা (Admin)":"তথ্য Edit / বদলি (Admin approval লাগবে)"):"Nurse Registration"}</h3>
-<label>Category</label><select id="r_cat" onchange="cat()">${opt(Object.keys(CAT),"Select category")}</select>
-<label>Name</label><input id="r_name"><label>Father's Name</label><input id="r_fa"><label>Mother's Name</label><input id="r_mo">
-<label>Date of Birth</label><input id="r_dob" type="date" onchange="$('#r_prl').textContent=prl(this.value)?'PRL Date: '+prl(this.value):''"><div id="r_prl" class="mu"></div>
-<label>Joining Date (চাকরিতে/বর্তমান কর্মস্থলে যোগদানের তারিখ)</label><input id="r_jd" type="date">
-<label>Phone number (User ID)</label><input id="r_ph" inputmode="tel" placeholder="01XXXXXXXXX" ${ed?"readonly":""}><label>BNMC Reg no.</label><input id="r_bn">
-<label>Designation</label><select id="r_des"><option value="">Select category first</option></select>
-<label>Working Place (Institute/Hospital name)</label><input id="r_wp">
-<div class="row"><div><label>Division</label><select id="r_dv" onchange="dv()">${opt(Object.keys(DIV),"Division")}</select></div><div><label>District</label><select id="r_di" onchange="di()"><option value="">District</option></select></div></div>
-<label>Upazila/Thana</label><div id="r_upw"><select id="r_up"><option value="">Select district first</option></select></div>
-<label>Address</label><textarea id="r_ad" rows="2"></textarea>
-<label>Educational Qualification — Category</label><select id="r_ec" onchange="ec()">${opt(["Nursing","HSC","SSC"],"Select")}</select>
-<div id="r_esw" style="display:none"><label>Nursing — Sub Category</label><select id="r_es">${opt(EDU,"Select")}</select></div>
-<label>Passing Institute & Year</label><input id="r_ei">
-<label>Email (optional)</label><input id="r_em" type="email">
-<button class="p" onclick="${ed?"save()":"reg()"}">${ed?(adm?"Save Changes":"Send to Admin for Approval"):"Submit for Approval"}</button><div class="msg">${esc(msg)}</div>
-<button class="s" onclick="${ed?"editing=null":"view='login'"};msg='';draw()">${ed?"Cancel":"Back to Login"}</button></div>`}
-function cat(){$("#r_des").innerHTML=opt(CAT[$("#r_cat").value]||[],"Select")}
-function dv(){$("#r_di").innerHTML=opt(DIV[$("#r_dv").value]||[],"District");di()}
-function di(){const u=UPA[$("#r_di").value];$("#r_upw").innerHTML=u?`<select id="r_up">${opt(u.concat(["Other"]),"Upazila/Thana")}</select>`:`<input id="r_up" placeholder="Upazila/Thana লিখুন">`}
-function ec(){$("#r_esw").style.display=$("#r_ec").value=="Nursing"?"block":"none"}
-function sv(i,v){const e=$("#r_"+i);if(!e)return;v=v||"";if(e.tagName=="SELECT"&&v&&![...e.options].some(o=>o.value==v))e.add(new Option(v,v));e.value=v}
-function fill(u){sv("cat",u.category);cat();sv("des",u.designation);sv("name",u.name);sv("fa",u.father);sv("mo",u.mother);sv("dob",u.dob);$("#r_prl").textContent=u.dob?"PRL Date: "+prl(u.dob):"";sv("jd",u.joinDate);sv("ph",u.phone);sv("bn",u.bnmc);sv("wp",u.workplace);
- sv("dv",u.division);dv();sv("di",u.district);di();sv("up",u.upazila);sv("ad",u.address);sv("ec",u.eduCat);ec();sv("es",u.eduSub);sv("ei",u.eduInfo);sv("em",u.email)}
-function collect(){const g=i=>$("#r_"+i).value.trim(),c=g("ec"),s=g("es");
- return{category:g("cat"),name:g("name"),father:g("fa"),mother:g("mo"),dob:g("dob"),joinDate:g("jd"),phone:g("ph"),bnmc:g("bn"),designation:g("des"),workplace:g("wp"),division:g("dv"),district:g("di"),upazila:g("up"),address:g("ad"),eduCat:c,eduSub:c=="Nursing"?s:"",education:c=="Nursing"?(s?"Nursing — "+s:""):c,eduInfo:g("ei"),email:g("em")}}
-function check(d){for(const k of["category","name","father","mother","dob","joinDate","phone","bnmc","designation","workplace","division","district","upazila","education"])if(!d[k])return"সব বাধ্যতামূলক তথ্য দিন ("+k+")";
- if(!/^01[3-9]\d{8}$/.test(d.phone))return"সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন";return""}
-async function reg(){const d=collect();msg=check(d);if(msg)return draw();
- if(all.some(x=>x.phone==d.phone)){msg="এই নম্বর আগেই নিবন্ধিত";return draw()}
- d.prl=prl(d.dob);d.role="user";d.status="pending";d.mustChange=true;d.pw=await H("1234");d.createdAt=new Date().toISOString();
- await store.set(d.phone,d);msg="";view="login";$("#app").innerHTML=`<div class="card"><h3>✅ আবেদন জমা হয়েছে</h3><p>Admin approve করলে আপনি Phone নম্বর ও Password <b>1234</b> দিয়ে login করতে পারবেন। প্রথমবার login এ password বদলাতে হবে।</p><button class="p" onclick="draw()">Login এ যান</button></div>`}
-async function save(){const d=collect();msg=check(d);if(msg)return draw();d.prl=prl(d.dob);const u=all.find(x=>x.phone==editing);
- if(me.role=="admin"){await store.set(u.phone,{...u,...d,pendingEdit:null});note="তথ্য আপডেট হয়েছে ✅"}
- else{await store.set(u.phone,{...u,pendingEdit:{...d,requestedAt:new Date().toISOString()}});note="আপনার পরিবর্তনের অনুরোধ Admin এর কাছে পাঠানো হয়েছে। Approve হলে তথ্য আপডেট হবে।"}
- editing=null;msg="";draw()}
-function pwForm(f){return`<div class="card"><h3>${f?"প্রথমবার Password পরিবর্তন করুন":"Change Password"}</h3><label>New Password (min 4)</label><input id="np" type="password"><label>Confirm</label><input id="np2" type="password"><button class="p" onclick="chpw()">Save</button>${f&&me.role=="user"?`<button class="s" onclick="later()">পরে করব (Later)</button>`:""}<div class="msg">${esc(msg)}</div></div>`}
-async function chpw(){const a=$("#np").value;if(a.length<4||a!==$("#np2").value||a=="1234"||a=="admin123"){msg="Password কমপক্ষে ৪ অক্ষর, মিলতে হবে এবং default password হওয়া যাবে না";return draw()}
- const u={...me,pw:await H(a),mustChange:false};msg="";await store.set(u.phone,u);me=u;tab=u.role=="admin"?"pend":"dir";draw()}
-const PF=[["name","Name"],["father","Father's Name"],["mother","Mother's Name"],["dob","Date of Birth"],["prl","PRL Date"],["joinDate","Joining Date"],["phone","Phone"],["bnmc","BNMC Reg no."],["category","Category"],["designation","Designation"],["workplace","Hospital / Working Place"],["division","Division"],["district","District"],["upazila","Upazila/Thana"],["address","Address"],["education","Education"],["email","Email"]];
-let pcols=PF.map(x=>x[0]);
-const ALLD=Object.values(DIV).flat().sort();
-const gv=(x,k)=>k=="prl"?prl(x.dob):(x[k]||"");
-function dirView(){return`<div class="card"><input id="q" placeholder="Name / Phone / BNMC search…" oninput="filt()">
-<div class="row" style="margin-top:8px"><select id="fc" onchange="filt()">${opt(Object.keys(CAT),"All categories")}</select><select id="fs" onchange="filt()">${opt([...new Set(Object.values(CAT).flat())],"All designations")}</select></div>
-<div class="row" style="margin-top:8px"><select id="fd" onchange="fdv()">${opt(Object.keys(DIV),"All divisions")}</select><select id="fi" onchange="fdi();filt()">${opt(ALLD,"All districts")}</select></div>
-<div class="row" style="margin-top:8px"><div id="fuw"><input id="fu" placeholder="Upazila/Thana" oninput="filt()"></div><input id="fh" placeholder="Hospital / Institute name" oninput="filt()"></div>
-<button class="s" onclick="rf()">Filter clear</button></div>
-${me&&me.role=="admin"?`<details class="card" open><summary><b>🖨️ Print Options (Admin)</b></summary><p class="mu">যে তথ্যগুলো print করতে চান সেগুলোতে tick দিন:</p>
-<div class="row">${PF.map(([k,l])=>`<label style="display:flex;gap:6px;align-items:center;margin:3px 0;color:var(--tx);font-size:14px"><input type="checkbox" style="width:auto" ${pcols.includes(k)?"checked":""} onchange="pc('${k}',this.checked)">${l}</label>`).join("")}</div>
-<div class="row"><button class="s" onclick="pall(1)">Select all</button><button class="s" onclick="pall(0)">Clear all</button></div>
-<button class="p" onclick="doPrint()">🖨️ Print (<span id="pn">0</span> জন)</button><div class="msg" id="pm"></div><div id="pv" style="overflow-x:auto;margin-top:10px"></div></details>`:""}<div id="list"></div>`}
-function pc(k,on){pcols=on?[...new Set([...pcols,k])]:pcols.filter(x=>x!=k)}
-function pall(on){pcols=on?PF.map(x=>x[0]):[];draw()}
-function fdv(){$("#fi").innerHTML=opt(DIV[$("#fd").value]||ALLD,"All districts");fdi();filt()}
-function fdi(){const u=UPA[$("#fi").value];$("#fuw").innerHTML=u?`<select id="fu" onchange="filt()">${opt(u.concat(["Other"]),"All upazila/thana")}</select>`:`<input id="fu" placeholder="Upazila/Thana" oninput="filt()">`}
-function rf(){draw()}
-function res(){const q=($("#q").value||"").toLowerCase(),c=$("#fc").value,d=$("#fd").value,s=$("#fs").value,i=$("#fi").value,u=($("#fu").value||"").toLowerCase(),h=($("#fh").value||"").toLowerCase();
- return all.filter(x=>x.role=="user"&&x.status=="approved"&&(!c||x.category==c)&&(!d||x.division==d)&&(!s||x.designation==s)&&(!i||x.district==i)&&(!u||(x.upazila||"").toLowerCase().includes(u))&&(!h||(x.workplace||"").toLowerCase().includes(h))&&(!q||[x.name,x.phone,x.bnmc].join(" ").toLowerCase().includes(q)))}
-function filt(){const r=res(),pn=$("#pn");if(pn)pn.textContent=r.length;$("#list").innerHTML=`<p class="mu">${r.length} জন পাওয়া গেছে</p>`+r.map(x=>profView(x)).join("")}
-function doPrint(){if(!me||me.role!="admin")return;const r=res(),cols=PF.filter(p=>pcols.includes(p[0]));
- if(!cols.length){$("#pm").textContent="কমপক্ষে একটি তথ্যে tick দিন";return}
- if(!r.length){$("#pm").textContent="Print করার মতো কোনো তথ্য নেই";return}$("#pm").textContent="";
- const f=[["fd","Division"],["fi","District"],["fu","Upazila/Thana"],["fh","Hospital"],["fc","Category"],["fs","Designation"]].map(([i,l])=>$("#"+i).value?l+": "+$("#"+i).value:"").filter(Boolean).join(" | ");
- $("#pa").innerHTML=`<h2 style="margin:0">BD Nurses Directory</h2><p style="margin:4px 0 10px">${esc(f||"All records")} — মোট: ${r.length} জন — ${new Date().toLocaleDateString("en-GB")}</p><table><thead><tr><th>#</th>${cols.map(c=>`<th>${c[1]}</th>`).join("")}</tr></thead><tbody>${r.map((x,n)=>`<tr><td>${n+1}</td>${cols.map(c=>`<td>${esc(gv(x,c[0]))}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
- $("#pv").innerHTML=$("#pa").innerHTML;try{window.print()}catch(e){$("#pm").textContent="এই browser এ print বন্ধ আছে"}}
-function profView(x,extra=""){return`<div class="card">${x.photo?`<img src="${x.photo}" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover;float:right">`:""}<b>${esc(x.name)}</b> <span class="tag">${esc(x.designation)}</span><br><span class="tag">${esc(x.category)}</span>${x.status&&x.status!="approved"?`<span class="tag">${esc(x.status)}</span>`:""}
-<div class="mu" style="margin-top:6px">📞 <a href="tel:${esc(x.phone)}">${esc(x.phone)}</a> · BNMC: ${esc(x.bnmc)}<br>🏥 ${esc(x.workplace)}<br>📍 ${esc(x.upazila)}, ${esc(x.district)}, ${esc(x.division)}${x.address?" — "+esc(x.address):""}<br>🎓 ${esc(x.education)}${x.eduInfo?" ("+esc(x.eduInfo)+")":""}<br>Father: ${esc(x.father)} · Mother: ${esc(x.mother)}<br>DOB: ${esc(x.dob)} · <b>PRL: ${esc(prl(x.dob))}</b><br>Joining Date: ${esc(x.joinDate||"—")}${x.email?"<br>✉️ "+esc(x.email):""}</div>${extra}</div>`}
-function meView(){return(me.pendingEdit?`<div class="note">⏳ আপনার তথ্য পরিবর্তনের অনুরোধ Admin approval এর অপেক্ষায় আছে</div>`:"")+profView(me,`<input type="file" id="pf" accept="image/*" style="display:none" onchange="setPhoto(this)"><button class="s" onclick="$('#pf').click()">📷 ${me.photo?"Profile picture পরিবর্তন করুন":"Profile picture যোগ করুন (ঐচ্ছিক)"}</button>${me.photo?`<button class="s" onclick="rmPhoto()">Picture মুছুন</button>`:""}<button class="p" onclick="editing='${me.phone}';msg='';draw()">✏️ তথ্য Edit / বদলি Request</button>`)}
-let skipPw=false;function later(){skipPw=true;tab="dir";draw()}
-function setPhoto(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=async()=>{const c=document.createElement("canvas");c.width=c.height=240;const s=Math.min(im.width,im.height);c.getContext("2d").drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,240,240);await store.set(me.phone,{...me,photo:c.toDataURL("image/jpeg",0.8)});note="Profile picture সেভ হয়েছে ✅";draw()};im.onerror=()=>{note="ছবি পড়া যায়নি";draw()};im.src=r.result};r.readAsDataURL(f)}
-async function rmPhoto(){await store.set(me.phone,{...me,photo:null});note="Picture মুছে ফেলা হয়েছে";draw()}
-function pendView(){const reg=all.filter(x=>x.role=="user"&&x.status=="pending"),eds=all.filter(x=>x.role=="user"&&x.status=="approved"&&x.pendingEdit);
- const B=(a,b)=>`<div class="act"><button style="background:#0f766e" onclick="${a}">Approve</button><button style="background:#b42318" onclick="${b}">Reject</button></div>`;
- return`<h4>নতুন নিবন্ধন (${reg.length})</h4>`+(reg.map(x=>profView(x,B(`setSt('${x.phone}','approved')`,`setSt('${x.phone}','rejected')`))).join("")||`<p class="mu">কোনো pending আবেদন নেই</p>`)+
- `<h4>তথ্য পরিবর্তন / বদলির অনুরোধ (${eds.length})</h4>`+(eds.map(x=>profView({...x,...x.pendingEdit},`<p class="mu">পুরাতন কর্মস্থল: ${esc(x.workplace)} (${esc(x.district)})</p>`+B(`setEd('${x.phone}',1)`,`setEd('${x.phone}',0)`))).join("")||`<p class="mu">কোনো অনুরোধ নেই</p>`)+`<h4>Password reset অনুরোধ</h4>`+(all.filter(x=>x.role=="user"&&x.resetReq).map(x=>`<div class="card"><b>${esc(x.name)}</b> · ${esc(x.phone)}<br><span class="mu">${esc(x.designation)}, ${esc(x.workplace)}</span><div class="act"><button style="background:#0f766e" onclick="doReset('${x.phone}')">Reset Password</button><button style="background:#b42318" onclick="clrReset('${x.phone}')">Reject</button></div></div>`).join("")||`<p class="mu">কোনো অনুরোধ নেই</p>`)}
-async function doReset(p){await store.set(p,{...all.find(x=>x.phone==p),pw:await H("1234"),mustChange:true,resetReq:null});note="Password reset হয়েছে ✅ ইউজার পরবর্তী login এ নতুন password দেবে";draw()}
-async function clrReset(p){await store.set(p,{...all.find(x=>x.phone==p),resetReq:null})}
-async function setSt(p,s){await store.set(p,{...all.find(x=>x.phone==p),status:s})}
-async function setEd(p,ok){const u=all.find(x=>x.phone==p);await store.set(p,ok?{...u,...u.pendingEdit,pendingEdit:null}:{...u,pendingEdit:null})}
-function allView(){const u=all.filter(x=>x.role=="user"),ap=u.filter(x=>x.status=="approved");
- return`<div class="card"><b>মোট নিবন্ধিত:</b> ${u.length} · <b>Approved:</b> ${ap.length}<br>`+Object.keys(CAT).map(c=>`${c}: ${ap.filter(x=>x.category==c).length}`).join("<br>")+`</div>`+
- u.map(x=>profView(x,`<div class="act"><button style="background:#0f766e" onclick="editing='${x.phone}';msg='';draw()">Edit</button><button style="background:#6b7280" onclick="rst('${x.phone}')">Reset Password</button><button style="background:#b42318" onclick="del('${x.phone}')">Delete</button></div>`)).join("")}
-async function del(p){if(confirm("এই ইউজারকে স্থায়ীভাবে Delete করবেন?"))await store.del(p)}
-async function rst(p){if(confirm("Password default এ reset করবেন? ইউজারকে পরবর্তী login এ বদলাতে হবে।")){await store.set(p,{...all.find(x=>x.phone==p),pw:await H("1234"),mustChange:true});note="Password reset হয়েছে ✅";draw()}}
+
+function updateTickerUI() {
+  const row = all.find(x => x.phone === "__news_ticker__");
+  const txt = (row && row.name && row.name.trim()) ? row.name.trim() : DEFAULT_TICKER;
+  const el = $("#tickerText");
+  if (el && el.textContent !== txt) el.textContent = txt;
+}
+
+function getEmailJsConfig() {
+  const row = all.find(x => x.phone === "__emailjs_config__" && x.role === "config");
+  if (!row || !row.address) return null;
+  try {
+    const obj = JSON.parse(row.address);
+    if (obj.service_id && obj.template_id && obj.public_key) return obj;
+  } catch (e) {}
+  return null;
+}
+
+const isMgr = u => !!u && (u.role === "admin" || u.role === "subadmin" || u.role === "editor");
+const scopeLabel = u => {
+  if (!u || u.role === "admin") return "All Bangladesh (Super Admin)";
+  const p = [u.scopeDivision, u.scopeDistrict, u.scopeUpazila, u.scopeWorkplace].filter(Boolean);
+  return p.length ? p.join(" › ") : "All Bangladesh";
+};
+function canManage(mgr, nurse) {
+  if (!mgr || !nurse) return false;
+  if (mgr.role === "admin") return true;
+  if (mgr.role !== "subadmin" && mgr.role !== "editor") return false;
+  const eq = (a, b) => (a || "").trim().toLowerCase() === (b || "").trim().toLowerCase();
+  if (mgr.scopeDivision && !eq(nurse.division, mgr.scopeDivision)) return false;
+  if (mgr.scopeDistrict && !eq(nurse.district, mgr.scopeDistrict)) return false;
+  if (mgr.scopeUpazila && !eq(nurse.upazila, mgr.scopeUpazila)) return false;
+  if (mgr.scopeWorkplace && !(nurse.workplace || "").toLowerCase().includes(mgr.scopeWorkplace.trim().toLowerCase())) return false;
+  return true;
+}
+
+const toRow = d => {
+  const row = {
+    phone: d.phone,
+    role: d.role || "user",
+    status: d.status || "pending",
+    pw: d.pw ?? "",
+    must_change: !!d.mustChange,
+    category: d.category || "",
+    name: d.name || "",
+    father: d.father || "",
+    mother: d.mother || "",
+    dob: d.dob || "",
+    prl: d.prl || "",
+    join_date: d.joinDate || "",
+    bnmc: d.bnmc || "",
+    designation: d.designation || "",
+    workplace: d.workplace || "",
+    division: d.division || "",
+    district: d.district || "",
+    upazila: d.upazila || "",
+    address: d.address || "",
+    education: d.education || "",
+    edu_cat: d.eduCat || "",
+    edu_sub: d.eduSub || "",
+    edu_info: d.eduInfo || "",
+    email: d.email || "",
+    photo: d.photo || null,
+    pending_edit: d.pendingEdit || null,
+    reset_req: d.resetReq || null,
+    scope_division: d.scopeDivision || "",
+    scope_district: d.scopeDistrict || "",
+    scope_upazila: d.scopeUpazila || "",
+    scope_workplace: d.scopeWorkplace || "",
+    recovery_code: d.recoveryCode || "",
+    recovery_exp: d.recoveryExp || ""
+  };
+  if (d.createdAt) row.created_at = d.createdAt;
+  unsupportedCols.forEach(c => delete row[c]);
+  return row;
+};
+
+const fromRow = r => ({
+  phone: r.phone || "",
+  role: r.role || "user",
+  status: r.status || "pending",
+  pw: r.pw || "",
+  mustChange: !!r.must_change,
+  category: r.category || "",
+  name: r.name || "",
+  father: r.father || "",
+  mother: r.mother || "",
+  dob: r.dob || "",
+  prl: r.prl || "",
+  joinDate: r.join_date || "",
+  bnmc: r.bnmc || "",
+  designation: r.designation || "",
+  workplace: r.workplace || "",
+  division: r.division || "",
+  district: r.district || "",
+  upazila: r.upazila || "",
+  address: r.address || "",
+  education: r.education || "",
+  eduCat: r.edu_cat || "",
+  eduSub: r.edu_sub || "",
+  eduInfo: r.edu_info || "",
+  email: r.email || "",
+  photo: r.photo || null,
+  pendingEdit: r.pending_edit || null,
+  resetReq: r.reset_req || null,
+  scopeDivision: r.scope_division || "",
+  scopeDistrict: r.scope_district || "",
+  scopeUpazila: r.scope_upazila || "",
+  scopeWorkplace: r.scope_workplace || "",
+  recoveryCode: r.recovery_code || "",
+  recoveryExp: r.recovery_exp || "",
+  createdAt: r.created_at || null
+});
+
+async function sbFetch(path, opts = {}) {
+  const h = { "apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json", ...(opts.headers || {}) };
+  if (SUPABASE_ANON_KEY.startsWith("eyJ")) h["Authorization"] = "Bearer " + SUPABASE_ANON_KEY;
+  const res = await fetch(`${SUPABASE_URL.replace(/\/+$/, "")}/rest/v1/${path}`, { ...opts, headers: h });
+  if (!res.ok) {
+    const t = await res.text();
+    const err = new Error(t || `HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : [];
+}
+
+const store = {
+  load: async () => {
+    const rows = await sbFetch("nurses?select=*&order=created_at.desc");
+    all = rows.map(fromRow);
+    updateTickerUI();
+  },
+  set: async (id, d) => {
+    const row = toRow({ ...d, phone: id });
+    for (let attempt = 0; attempt < 8; attempt++) {
+      try {
+        await sbFetch("nurses?on_conflict=phone", {
+          method: "POST",
+          headers: { "Prefer": "resolution=merge-duplicates,return=representation" },
+          body: JSON.stringify(row)
+        });
+        break;
+      } catch (e) {
+        const m = String(e.message || "").match(/Could not find the '([^']+)' column/);
+        if (e.status === 400 && m && m[1] && (m[1] in row)) {
+          unsupportedCols.add(m[1]);
+          delete row[m[1]];
+          continue;
+        }
+        throw e;
+      }
+    }
+    await store.load();
+    draw();
+  },
+  del: async id => {
+    await sbFetch(`nurses?phone=eq.${encodeURIComponent(id)}`, { method: "DELETE" });
+    await store.load();
+    draw();
+  }
+};
+
+function isEditingAnyInput() {
+  const tag = (document.activeElement && document.activeElement.tagName) || "";
+  return editing || addingByManager || tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+}
+
+async function silentSync() {
+  if (syncInFlight) return;
+  syncInFlight = true;
+  try {
+    await store.load();
+    if (!isEditingAnyInput()) draw();
+  } catch (e) {} finally {
+    syncInFlight = false;
+  }
+}
+
+function connectRealtime() {
+  if (!SUPABASE_URL || SUPABASE_URL.includes("YOUR_SUPABASE")) return;
+  try {
+    const wsBase = SUPABASE_URL.replace(/\/+$/, "").replace(/^https:\/\//, "wss://").replace(/^http:\/\//, "ws://");
+    const url = `${wsBase}/realtime/v1/websocket?apikey=${encodeURIComponent(SUPABASE_ANON_KEY)}&vsn=1.0.0`;
+    ws = new WebSocket(url);
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        topic: "realtime:public:nurses",
+        event: "phx_join",
+        payload: {
+          config: {
+            broadcast: { self: false },
+            presence: { key: "" },
+            postgres_changes: [{ event: "*", schema: "public", table: "nurses" }]
+          }
+        },
+        ref: "1"
+      }));
+      clearInterval(hbTimer);
+      hbTimer = setInterval(() => {
+        if (ws && ws.readyState === 1) {
+          ws.send(JSON.stringify({ topic: "phoenix", event: "heartbeat", payload: {}, ref: "hb" }));
+        }
+      }, 25000);
+    };
+    ws.onmessage = ev => {
+      try {
+        const d = JSON.parse(ev.data);
+        if (d.event === "phx_reply" && d.topic === "realtime:public:nurses" && d.payload && d.payload.status === "ok") {
+          rtConnected = true;
+          updateLiveBadge();
+        } else if (d.event === "postgres_changes" || d.event === "INSERT" || d.event === "UPDATE" || d.event === "DELETE") {
+          silentSync();
+        }
+      } catch (e) {}
+    };
+    ws.onclose = () => {
+      rtConnected = false;
+      updateLiveBadge();
+      clearInterval(hbTimer);
+      setTimeout(connectRealtime, 4000);
+    };
+    ws.onerror = () => { try { ws.close(); } catch (e) {} };
+  } catch (e) {}
+}
+
+async function init() {
+  startClock();
+  if (!SUPABASE_URL || SUPABASE_URL.includes("YOUR_SUPABASE")) {
+    $("#app").innerHTML = `<div class="card"><h3>⚠️ Supabase Configuration Required</h3><p class="mu">index.html ফাইলে SUPABASE_URL এবং SUPABASE_ANON_KEY সেট করুন।</p></div>`;
+    return;
+  }
+  try {
+    await store.load();
+    await ensureAdmin();
+    draw();
+    connectRealtime();
+    setInterval(silentSync, 15000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) silentSync(); });
+    window.addEventListener("focus", silentSync);
+  } catch (e) {
+    $("#app").innerHTML = `<div class="card"><h3>Connection Error</h3><p class="msg">${esc(e.message)}</p></div>`;
+  }
+}
+
+let adminMade = false;
+async function ensureAdmin() {
+  if (adminMade) return;
+  if (all.some(x => x.role === "admin")) { adminMade = true; return; }
+  adminMade = true;
+  await store.set("admin", {
+    phone: "admin", role: "admin", name: "Administrator",
+    pw: await H("admin123"), mustChange: true, status: "approved"
+  });
+}
+
+const prl = d => {
+  if (!d) return "";
+  const x = new Date(d);
+  if (isNaN(x.getTime())) return "";
+  x.setFullYear(x.getFullYear() + 59);
+  return x.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+};
+
+function renderModal() {
+  if (me && me.mustChange && showPwPrompt) {
+    $("#modalRoot").innerHTML = `
+      <div class="modal-backdrop">
+        <div class="modal-box">
+          <h3 style="margin-top:0">🔒 Password পরিবর্তন করুন</h3>
+          <p class="mu">আপনি এখনো default password ব্যবহার করছেন। নিরাপত্তার জন্য নতুন password সেট করতে পারেন অথবা 'পরে করব (Later)' দিয়ে চালিয়ে যেতে পারেন। Password পরিবর্তন না করা পর্যন্ত প্রতিবার লগইনে এই বক্সটি আসবে।</p>
+          <button class="p" onclick="showPwPrompt=false;tab='pw';editing=null;addingByManager=false;draw()">Change Now</button>
+          <button class="s" onclick="showPwPrompt=false;draw()">পরে করব (Later)</button>
+        </div>
+      </div>`;
+  } else {
+    $("#modalRoot").innerHTML = "";
+  }
+}
+
+function draw() {
+  updateTickerUI();
+  updateLiveBadge();
+  $("#hd").innerHTML = me
+    ? `<button onclick="manualRefresh()" title="Sync">🔄</button> <span style="color:#fff">${esc(me.name)}</span> <button onclick="out()">Logout</button>`
+    : (view === "admin" ? `<button onclick="manualRefresh()" title="Sync">🔄</button>` : `<button onclick="manualRefresh()" title="Sync">🔄</button> <button onclick="view='admin';msg='';draw()">🔐 Admin</button>`);
+
+  if (!me) {
+    renderModal();
+    if (!["register", "admin", "forgot", "submitted"].includes(view)) view = "login";
+    $("#app").innerHTML =
+      view === "register" ? regForm(false) :
+      view === "admin" ? adminForm() :
+      view === "forgot" ? forgotForm() :
+      view === "submitted" ? submittedView() :
+      loginForm();
+    if (view === "register") bindFormPhotoPreview();
+    return;
+  }
+
+  const cur = all.find(x => x.phone === me.phone);
+  if (cur) me = cur;
+  renderModal();
+
+  const mgr = isMgr(me);
+  const scopedUsers = all.filter(x => x.role === "user" && canManage(me, x));
+  const pend = scopedUsers.filter(x => x.status === "pending" || (x.status === "approved" && x.pendingEdit) || x.resetReq).length;
+  const n = note; note = "";
+  const T = (k, l) => `<button class="${tab === k && !editing && !addingByManager ? "on" : ""}" onclick="tab='${k}';editing=null;addingByManager=false;msg='';draw()">${l}</button>`;
+  let t = `<div class="tabs">${T("dir", "Directory")}${mgr ? T("pend", "Requests (" + pend + ")") + T("all", "Manage") : T("me", "My Profile")}${T("pw", "Password")}</div>`
+    + (n ? `<div class="note">${esc(n)}</div>` : "")
+    + (me.mustChange ? `<div class="note" style="background:#b45309">⚠️ আপনি এখনো default password ব্যবহার করছেন। Password tab থেকে বদলে নিন।</div>` : "");
+
+  let body = addingByManager ? regForm(false, true)
+    : editing ? regForm(true, false)
+    : tab === "dir" ? dirView()
+    : tab === "pend" && mgr ? pendView(scopedUsers)
+    : tab === "all" && mgr ? allView(scopedUsers)
+    : tab === "me" ? meView()
+    : tab === "pw" ? pwForm() : "";
+
+  $("#app").innerHTML = t + body;
+  if (addingByManager) {
+    prefillManagerScope();
+    bindFormPhotoPreview();
+  } else if (editing) {
+    const u = all.find(x => x.phone === editing);
+    if (u) fill(u);
+    bindFormPhotoPreview();
+  } else if (tab === "dir") {
+    filt();
+  }
+}
+
+async function manualRefresh() {
+  try { await store.load(); note = "সিঙ্ক সম্পন্ন হয়েছে ✅"; draw(); }
+  catch (e) { msg = e.message; draw(); }
+}
+
+function submittedView() {
+  return `<div class="card"><h3>✅ আবেদন জমা হয়েছে</h3>
+  <p>Admin approve করলে আপনি Phone নম্বর ও Password <b>1234</b> দিয়ে login করতে পারবেন। প্রথমবার login এ password বদলানোর অপশন পাবেন।</p>
+  <button class="p" onclick="view='login';msg='';draw()">Login এ যান</button></div>`;
+}
+
+function loginForm() {
+  return `<div class="card"><h3>Login</h3>
+  <label>Phone number (User ID)</label><input id="lp" inputmode="tel" placeholder="01XXXXXXXXX">
+  <label>Password</label><input id="lw" type="password" onkeydown="event.key==='Enter'&&login()">
+  <button class="p" onclick="login()">Login</button>
+  <div class="msg">${esc(msg)}</div>
+  <button class="s" onclick="view='forgot';recSent=false;msg='';draw()">Password ভুলে গেছেন?</button>
+  <button class="s" onclick="formPhoto=null;view='register';msg='';draw()">Register (নতুন নিবন্ধন)</button></div>`;
+}
+
+function adminForm() {
+  return `<div class="card"><h3>🔐 Admin / Editor Panel Login</h3>
+  <label>Admin / Editor ID</label><input id="ap" autocomplete="off">
+  <label>Password</label><input id="aw" type="password" onkeydown="event.key==='Enter'&&adminLogin()">
+  <button class="p" onclick="adminLogin()">Login as Admin / Editor</button>
+  <div class="msg">${esc(msg)}</div>
+  <button class="s" onclick="view='login';msg='';draw()">Back</button></div>`;
+}
+
+function maskEmail(em) {
+  const p = em.split("@");
+  if (p.length !== 2) return em;
+  const l = p[0];
+  return (l.length <= 2 ? (l[0] || "*") + "*" : l.slice(0, 2) + "***" + l.slice(-1)) + "@" + p[1];
+}
+
+function forgotForm() {
+  return `<div class="card"><h3>✉️ Password Recovery (Email কোড)</h3>
+  <p class="mu">নিবন্ধিত Email অথবা Phone নম্বর দিন। আপনার Email-এ ৬ ডিজিটের ভেরিফিকেশন কোড পাঠানো হবে, যা দিয়ে সরাসরি নতুন Password সেট করতে পারবেন।</p>
+  <label>Registered Email বা Phone</label><input id="rec_q" placeholder="name@example.com / 01XXXXXXXXX">
+  <button class="p" onclick="sendEmailCode()">${recSent ? "আবার কোড পাঠান" : "Email-এ কোড পাঠান"}</button>
+  ${recSent ? `
+    <p class="mu" style="color:var(--pr);font-weight:600;margin-top:10px">কোড পাঠানো হয়েছে: ${esc(recMaskedEmail)}</p>
+    <label>৬ ডিজিটের ভেরিফিকেশন কোড</label><input id="rec_c" inputmode="numeric" maxlength="6">
+    <label>New Password (min 4)</label><input id="rec_pw1" type="password">
+    <label>Confirm Password</label><input id="rec_pw2" type="password">
+    <button class="p" onclick="verifyCodeReset()">Verify & Change Password</button>
+  ` : ""}
+  <hr style="border:0;border-top:1px solid var(--bd);margin:14px 0">
+  <p class="mu">অথবা Email যোগ করা না থাকলে Admin-এর কাছে অনুরোধ পাঠান:</p>
+  <label>Phone number</label><input id="fp" inputmode="tel" placeholder="01XXXXXXXXX">
+  <button class="s" onclick="sendReset()">Admin কে অনুরোধ পাঠান</button>
+  <div class="msg" style="${msg.startsWith("✅") ? "color:var(--pr);font-weight:600" : ""}">${esc(msg)}</div>
+  <button class="s" onclick="view='login';recSent=false;msg='';draw()">Back to Login</button></div>`;
+}
+
+async function sendEmailCode() {
+  const q = ($("#rec_q").value || "").trim();
+  if (!q) { msg = "আপনার নিবন্ধিত Email অথবা Phone নম্বর দিন"; return draw(); }
+  await store.load();
+  const u = all.find(x => x.role === "user" && x.status === "approved" && ((x.email || "").toLowerCase() === q.toLowerCase() || x.phone === q));
+  if (!u) { msg = "এই Email বা Phone নম্বরে কোনো approved account পাওয়া যায়নি"; return draw(); }
+  if (!u.email || !u.email.includes("@")) { msg = "এই অ্যাকাউন্টে কোনো Email যোগ করা নেই। নিচের 'Admin কে অনুরোধ পাঠান' ব্যবহার করুন।"; return draw(); }
+  const cfg = getEmailJsConfig();
+  if (!cfg) { msg = "ইমেইল সার্ভিস (EmailJS) কনফিগার করা নেই। Global Admin প্যানেল থেকে EmailJS সেটিংস সেভ করুন অথবা নিচের 'Admin কে অনুরোধ পাঠান' ব্যবহার করুন।"; return draw(); }
+
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const exp = String(Date.now() + 15 * 60 * 1000);
+  try {
+    await store.set(u.phone, { ...u, recoveryCode: code, recoveryExp: exp });
+    const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        service_id: cfg.service_id,
+        template_id: cfg.template_id,
+        user_id: cfg.public_key,
+        template_params: {
+          to_email: u.email,
+          to_name: u.name,
+          passcode: code,
+          code: code,
+          app_name: "BD Nurses Directory"
+        }
+      })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    recSent = true;
+    recPhone = u.phone;
+    recMaskedEmail = maskEmail(u.email);
+    msg = `✅ ${recMaskedEmail} ঠিকানায় ৬ ডিজিটের ভেরিফিকেশন কোড পাঠানো হয়েছে (১৫ মিনিট মেয়াদ)।`;
+  } catch (e) {
+    msg = "ইমেইল পাঠানো যায়নি: " + (e.message || e);
+  }
+  draw();
+}
+
+async function verifyCodeReset() {
+  const code = ($("#rec_c").value || "").trim();
+  const pw1 = $("#rec_pw1").value, pw2 = $("#rec_pw2").value;
+  if (code.length !== 6) { msg = "৬ ডিজিটের কোড লিখুন"; return draw(); }
+  if (pw1.length < 4 || pw1 !== pw2 || pw1 === "1234" || pw1 === "admin123") {
+    msg = "Password কমপক্ষে ৪ অক্ষর, মিলতে হবে এবং default password হওয়া যাবে না"; return draw();
+  }
+  await store.load();
+  const u = all.find(x => x.phone === recPhone);
+  if (!u) { msg = "অ্যাকাউন্ট পাওয়া যায়নি"; return draw(); }
+  if (u.recoveryCode !== code) { msg = "ভেরিফিকেশন কোড ভুল হয়েছে"; return draw(); }
+  if (Date.now() > Number(u.recoveryExp || 0)) { msg = "কোডের মেয়াদ শেষ হয়ে গেছে। আবার কোড পাঠান।"; return draw(); }
+  await store.set(u.phone, { ...u, pw: await H(pw1), mustChange: false, recoveryCode: "", recoveryExp: "" });
+  recSent = false; recPhone = "";
+  msg = "✅ Password সফলভাবে পরিবর্তন হয়েছে! এখন নতুন Password দিয়ে Login করুন।";
+  draw();
+}
+
+async function sendReset() {
+  const p = ($("#fp").value || "").trim();
+  await store.load();
+  const u = all.find(x => x.phone === p && x.role === "user" && x.status === "approved");
+  if (!u) { msg = "এই নম্বরে কোনো approved account পাওয়া যায়নি"; return draw(); }
+  await store.set(p, { ...u, resetReq: { at: new Date().toISOString() } });
+  msg = "✅ অনুরোধ Admin এর কাছে পাঠানো হয়েছে। Approve হলে আবার login করুন।";
+  draw();
+}
+
+async function adminLogin() {
+  const p = ($("#ap").value || "").trim(), pw = $("#aw").value;
+  await store.load();
+  let u = all.find(x => isMgr(x) && x.phone === p);
+  if (!u && p === "admin" && pw === "admin123") {
+    u = { phone: "admin", role: "admin", name: "Administrator", pw: await H("admin123"), mustChange: true, status: "approved" };
+    await store.set("admin", u);
+  }
+  if (!u || u.pw !== await H(pw)) { msg = "Admin/Editor ID বা Password ভুল"; return draw(); }
+  msg = ""; me = u; tab = "pend"; showPwPrompt = !!u.mustChange; draw();
+}
+
+async function login() {
+  const p = ($("#lp").value || "").trim(), w = await H($("#lw").value);
+  await store.load();
+  const u = all.find(x => x.phone === p && x.role === "user");
+  if (!u || u.pw !== w) { msg = "Phone বা Password ভুল"; return draw(); }
+  if (u.status === "pending") { msg = "আপনার আবেদন এখনো Admin approval এর অপেক্ষায়"; return draw(); }
+  if (u.status === "rejected") { msg = "আপনার আবেদন বাতিল করা হয়েছে"; return draw(); }
+  msg = ""; me = u; tab = "dir"; showPwPrompt = !!u.mustChange; draw();
+}
+
+function out() {
+  showPwPrompt = false; me = null; editing = null; addingByManager = false; formPhoto = null; view = "login"; msg = ""; draw();
+}
+
+const opt = (a, ph) => `<option value="">${ph}</option>` + a.map(x => `<option>${esc(x)}</option>`).join("");
+
+function regForm(ed, byMgr = false) {
+  const mgr = isMgr(me);
+  const title = byMgr ? "নতুন নার্স যোগ করুন (Admin / Editor)" : ed ? (mgr ? "তথ্য সম্পাদনা (Admin / Editor)" : "তথ্য Edit / বদলি (Admin approval লাগবে)") : "Nurse Registration";
+  const btnText = byMgr ? "Save & Approve Nurse" : ed ? (mgr ? "Save Changes" : "Send to Admin for Approval") : "Submit for Approval";
+  return `<div class="card"><h3>${title}</h3>
+  <div style="display:flex;align-items:center;gap:12px;margin:8px 0">
+    <img id="r_photo_prev" class="avatar" style="display:none" alt="">
+    <input type="file" id="r_photo_inp" accept="image/*" style="display:none" onchange="pickFormPhoto(this)">
+    <button type="button" class="s" style="margin:0;flex:1" onclick="$('#r_photo_inp').click()">📷 Profile Photo (ঐচ্ছিক)</button>
+    <button type="button" id="r_photo_rm" class="s" style="margin:0;width:auto;display:none" onclick="clearFormPhoto()">মুছুন</button>
+  </div>
+  <label>Category *</label><select id="r_cat" onchange="cat()">${opt(Object.keys(CAT), "Select category")}</select>
+  <label>Name *</label><input id="r_name">
+  <label>Father's Name *</label><input id="r_fa">
+  <label>Mother's Name *</label><input id="r_mo">
+  <label>Date of Birth *</label><input id="r_dob" type="date" onchange="$('#r_prl').textContent=prl(this.value)?'PRL Date: '+prl(this.value):''"><div id="r_prl" class="mu"></div>
+  <label>Joining Date (চাকরিতে/বর্তমান কর্মস্থলে যোগদানের তারিখ) *</label><input id="r_jd" type="date">
+  <label>Phone number (User ID) *</label><input id="r_ph" inputmode="tel" placeholder="01XXXXXXXXX" ${ed ? "readonly" : ""}>
+  <label>BNMC Reg no. *</label><input id="r_bn">
+  <label>Designation *</label><select id="r_des"><option value="">Select category first</option></select>
+  <label>Working Place (Institute/Hospital name) *</label><input id="r_wp">
+  <div class="row">
+    <div><label>Division *</label><select id="r_dv" onchange="dv()">${opt(Object.keys(DIV), "Division")}</select></div>
+    <div><label>District *</label><select id="r_di" onchange="di()"><option value="">District</option></select></div>
+  </div>
+  <label>Upazila/Thana *</label><div id="r_upw"><select id="r_up" onchange="onUpaChange()"><option value="">Select district first</option></select></div>
+  <div id="r_up_custom_wrap" style="display:none"><label>Custom Upazila/Thana নাম লিখুন *</label><input id="r_up_custom" placeholder="Upazila/Thana লিখুন"></div>
+  <label>Address</label><textarea id="r_ad" rows="2"></textarea>
+  <label>Educational Qualification — Category *</label><select id="r_ec" onchange="ec()">${opt(["Nursing", "HSC", "SSC"], "Select")}</select>
+  <div id="r_esw" style="display:none"><label>Nursing — Sub Category *</label><select id="r_es">${opt(EDU, "Select")}</select></div>
+  <label>Passing Institute & Year</label><input id="r_ei">
+  <label>Email (পাসওয়ার্ড রিকভারির জন্য)</label><input id="r_em" type="email">
+  <button class="p" onclick="${byMgr ? "saveNewByMgr()" : ed ? "save()" : "reg()"}">${btnText}</button>
+  <div class="msg">${esc(msg)}</div>
+  <button class="s" onclick="editing=null;addingByManager=false;formPhoto=null;${!me ? "view='login';" : ""}msg='';draw()">${(ed || byMgr) ? "Cancel" : "Back to Login"}</button></div>`;
+}
+
+function bindFormPhotoPreview() {
+  const prev = $("#r_photo_prev"), rm = $("#r_photo_rm");
+  if (!prev || !rm) return;
+  if (formPhoto) { prev.src = formPhoto; prev.style.display = "block"; rm.style.display = "block"; }
+  else { prev.style.display = "none"; rm.style.display = "none"; }
+}
+function pickFormPhoto(inp) {
+  const f = inp.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    const im = new Image();
+    im.onload = () => {
+      const c = document.createElement("canvas"); c.width = c.height = 240;
+      const s = Math.min(im.width, im.height);
+      c.getContext("2d").drawImage(im, (im.width - s) / 2, (im.height - s) / 2, s, s, 0, 0, 240, 240);
+      formPhoto = c.toDataURL("image/jpeg", 0.8);
+      bindFormPhotoPreview();
+    };
+    im.src = r.result;
+  };
+  r.readAsDataURL(f);
+}
+function clearFormPhoto() { formPhoto = null; bindFormPhotoPreview(); }
+
+function cat() { $("#r_des").innerHTML = opt(CAT[$("#r_cat").value] || [], "Select"); }
+function dv() { $("#r_di").innerHTML = opt(DIV[$("#r_dv").value] || [], "District"); di(); }
+function di() {
+  const u = UPA[$("#r_di").value];
+  $("#r_upw").innerHTML = u
+    ? `<select id="r_up" onchange="onUpaChange()">${opt(u.concat(["Other"]), "Upazila/Thana")}</select>`
+    : `<input id="r_up" placeholder="Upazila/Thana লিখুন">`;
+  onUpaChange();
+}
+function onUpaChange() {
+  const el = $("#r_up"), wrap = $("#r_up_custom_wrap");
+  if (!wrap || !el) return;
+  wrap.style.display = (el.tagName === "SELECT" && el.value === "Other") ? "block" : "none";
+}
+function ec() { $("#r_esw").style.display = $("#r_ec").value === "Nursing" ? "block" : "none"; }
+function sv(i, v) {
+  const e = $("#r_" + i); if (!e) return;
+  v = v || "";
+  if (e.tagName === "SELECT" && v && ![...e.options].some(o => o.value === v)) e.add(new Option(v, v));
+  e.value = v;
+}
+function prefillManagerScope() {
+  if (!me) return;
+  sv("dv", me.scopeDivision); dv();
+  sv("di", me.scopeDistrict); di();
+  if (me.scopeUpazila) {
+    const preset = UPA[me.scopeDistrict] || [];
+    if (preset.length && !preset.includes(me.scopeUpazila)) {
+      sv("up", "Other"); onUpaChange(); $("#r_up_custom").value = me.scopeUpazila;
+    } else { sv("up", me.scopeUpazila); }
+  }
+  sv("wp", me.scopeWorkplace);
+}
+function fill(u) {
+  formPhoto = u.photo || null;
+  sv("cat", u.category); cat(); sv("des", u.designation);
+  sv("name", u.name); sv("fa", u.father); sv("mo", u.mother);
+  sv("dob", u.dob); $("#r_prl").textContent = u.dob ? "PRL Date: " + prl(u.dob) : "";
+  sv("jd", u.joinDate); sv("ph", u.phone); sv("bn", u.bnmc); sv("wp", u.workplace);
+  sv("dv", u.division); dv(); sv("di", u.district); di();
+  const preset = UPA[u.district];
+  if (preset && u.upazila && !preset.includes(u.upazila)) {
+    sv("up", "Other"); onUpaChange(); $("#r_up_custom").value = u.upazila;
+  } else {
+    sv("up", u.upazila); onUpaChange();
+  }
+  sv("ad", u.address); sv("ec", u.eduCat); ec(); sv("es", u.eduSub); sv("ei", u.eduInfo); sv("em", u.email);
+}
+function collect() {
+  const g = i => ($("#r_" + i) ? $("#r_" + i).value.trim() : "");
+  const c = g("ec"), s = g("es");
+  const upEl = $("#r_up");
+  const upVal = (upEl && upEl.tagName === "SELECT" && upEl.value === "Other") ? g("up_custom") : g("up");
+  return {
+    category: g("cat"), name: g("name"), father: g("fa"), mother: g("mo"),
+    dob: g("dob"), joinDate: g("jd"), phone: g("ph"), bnmc: g("bn"),
+    designation: g("des"), workplace: g("wp"), division: g("dv"),
+    district: g("di"), upazila: upVal, address: g("ad"),
+    eduCat: c, eduSub: c === "Nursing" ? s : "",
+    education: c === "Nursing" ? (s ? "Nursing — " + s : "") : c,
+    eduInfo: g("ei"), email: g("em"), photo: formPhoto
+  };
+}
+function check(d) {
+  for (const k of ["category", "name", "father", "mother", "dob", "joinDate", "phone", "bnmc", "designation", "workplace", "division", "district", "upazila", "education"]) {
+    if (!d[k]) return "সব বাধ্যতামূলক তথ্য দিন (" + k + ")";
+  }
+  if (!/^01[3-9]\d{8}$/.test(d.phone)) return "সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন";
+  return "";
+}
+async function reg() {
+  const d = collect(); msg = check(d); if (msg) return draw();
+  await store.load();
+  if (all.some(x => x.phone === d.phone)) { msg = "এই নম্বর আগেই নিবন্ধিত"; return draw(); }
+  d.prl = prl(d.dob); d.role = "user"; d.status = "pending"; d.mustChange = true;
+  d.pw = await H("1234"); d.createdAt = new Date().toISOString();
+  await store.set(d.phone, d);
+  formPhoto = null; msg = ""; view = "submitted"; draw();
+}
+async function saveNewByMgr() {
+  const d = collect(); msg = check(d); if (msg) return draw();
+  if (!canManage(me, d)) { msg = `আপনার নির্ধারিত এলাকা (${scopeLabel(me)}) এর বাইরে নার্স যোগ করা যাবে না।`; return draw(); }
+  await store.load();
+  if (all.some(x => x.phone === d.phone)) { msg = "এই নম্বর আগেই নিবন্ধিত"; return draw(); }
+  d.prl = prl(d.dob); d.role = "user"; d.status = "approved"; d.mustChange = true;
+  d.pw = await H("1234"); d.createdAt = new Date().toISOString();
+  await store.set(d.phone, d);
+  addingByManager = false; formPhoto = null; msg = "";
+  note = "নতুন নার্স সফলভাবে যোগ ও Approve হয়েছে ✅ (Default Password: 1234)";
+  draw();
+}
+async function save() {
+  const d = collect(); msg = check(d); if (msg) return draw();
+  d.prl = prl(d.dob);
+  const u = all.find(x => x.phone === editing);
+  if (isMgr(me)) {
+    await store.set(u.phone, { ...u, ...d, pendingEdit: null });
+    note = "তথ্য আপডেট হয়েছে ✅";
+  } else {
+    const { photo, ...editPayload } = d;
+    await store.set(u.phone, { ...u, photo: d.photo, pendingEdit: { ...editPayload, requestedAt: new Date().toISOString() } });
+    note = "আপনার পরিবর্তনের অনুরোধ Admin এর কাছে পাঠানো হয়েছে। Approve হলে তথ্য আপডেট হবে।";
+  }
+  editing = null; formPhoto = null; msg = ""; draw();
+}
+
+function pwForm() {
+  return `<div class="card"><h3>Change Password</h3>
+  <label>New Password (min 4)</label><input id="np" type="password">
+  <label>Confirm</label><input id="np2" type="password">
+  <button class="p" onclick="chpw()">Save</button><div class="msg">${esc(msg)}</div></div>`;
+}
+async function chpw() {
+  const a = $("#np").value;
+  if (a.length < 4 || a !== $("#np2").value || a === "1234" || a === "admin123") {
+    msg = "Password কমপক্ষে ৪ অক্ষর, মিলতে হবে এবং default password হওয়া যাবে না"; return draw();
+  }
+  const u = { ...me, pw: await H(a), mustChange: false };
+  msg = ""; showPwPrompt = false;
+  await store.set(u.phone, u);
+  me = u; tab = isMgr(u) ? "pend" : "dir";
+  note = "Password পরিবর্তন হয়েছে ✅"; draw();
+}
+
+const PF = [["name","Name"],["father","Father's Name"],["mother","Mother's Name"],["dob","Date of Birth"],["prl","PRL Date"],["joinDate","Joining Date"],["phone","Phone"],["bnmc","BNMC Reg no."],["category","Category"],["designation","Designation"],["workplace","Hospital / Working Place"],["division","Division"],["district","District"],["upazila","Upazila/Thana"],["address","Address"],["education","Education"],["email","Email"]];
+let pcols = PF.map(x => x[0]);
+const ALLD = Object.values(DIV).flat().sort();
+const gv = (x, k) => k === "prl" ? prl(x.dob) : (x[k] || "");
+
+function dirView() {
+  return `<div class="card">
+  <input id="q" placeholder="Name / Phone / BNMC search…" oninput="filt()">
+  <div class="row" style="margin-top:8px"><select id="fc" onchange="filt()">${opt(Object.keys(CAT), "All categories")}</select><select id="fs" onchange="filt()">${opt([...new Set(Object.values(CAT).flat())], "All designations")}</select></div>
+  <div class="row" style="margin-top:8px"><select id="fd" onchange="fdv()">${opt(Object.keys(DIV), "All divisions")}</select><select id="fi" onchange="fdi();filt()">${opt(ALLD, "All districts")}</select></div>
+  <div class="row" style="margin-top:8px"><div id="fuw"><input id="fu" placeholder="Upazila/Thana" oninput="filt()"></div><input id="fh" placeholder="Hospital / Institute name" oninput="filt()"></div>
+  <button class="s" onclick="rf()">Filter clear</button></div>
+  ${isMgr(me) ? `<details class="card" open><summary><b>🖨️ Print Options (Admin)</b></summary><p class="mu">যে তথ্যগুলো print করতে চান সেগুলোতে tick দিন:</p>
+  <div class="row">${PF.map(([k, l]) => `<label style="display:flex;gap:6px;align-items:center;margin:3px 0;color:var(--tx);font-size:14px"><input type="checkbox" style="width:auto" ${pcols.includes(k) ? "checked" : ""} onchange="pc('${k}',this.checked)">${l}</label>`).join("")}</div>
+  <div class="row"><button class="s" onclick="pall(1)">Select all</button><button class="s" onclick="pall(0)">Clear all</button></div>
+  <button class="p" onclick="doPrint()">🖨️ Print (<span id="pn">0</span> জন)</button><div class="msg" id="pm"></div><div id="pv" style="overflow-x:auto;margin-top:10px"></div></details>` : ""}
+  <div id="list"></div>`;
+}
+function pc(k, on) { pcols = on ? [...new Set([...pcols, k])] : pcols.filter(x => x !== k); }
+function pall(on) { pcols = on ? PF.map(x => x[0]) : []; draw(); }
+function fdv() { $("#fi").innerHTML = opt(DIV[$("#fd").value] || ALLD, "All districts"); fdi(); filt(); }
+function fdi() {
+  const u = UPA[$("#fi").value];
+  $("#fuw").innerHTML = u ? `<select id="fu" onchange="filt()">${opt(u.concat(["Other"]), "All upazila/thana")}</select>` : `<input id="fu" placeholder="Upazila/Thana" oninput="filt()">`;
+}
+function rf() { draw(); }
+function res() {
+  const q = ($("#q").value || "").toLowerCase(), c = $("#fc").value, d = $("#fd").value, s = $("#fs").value, i = $("#fi").value, u = ($("#fu").value || "").toLowerCase(), h = ($("#fh").value || "").toLowerCase();
+  return all.filter(x => x.role === "user" && x.status === "approved" &&
+    (!c || x.category === c) && (!d || x.division === d) && (!s || x.designation === s) && (!i || x.district === i) &&
+    (!u || (x.upazila || "").toLowerCase().includes(u)) && (!h || (x.workplace || "").toLowerCase().includes(h)) &&
+    (!q || [x.name, x.phone, x.bnmc].join(" ").toLowerCase().includes(q)));
+}
+function filt() {
+  const r = res(), pn = $("#pn"); if (pn) pn.textContent = r.length;
+  $("#list").innerHTML = `<p class="mu">${r.length} জন পাওয়া গেছে</p>` + r.map(x => {
+    const canEdit = canManage(me, x);
+    return profView(x, canEdit ? `<button class="s" onclick="editing='${esc(x.phone)}';msg='';draw()">✏️ তথ্য Edit করুন</button>` : "");
+  }).join("");
+}
+function doPrint() {
+  if (!isMgr(me)) return;
+  const r = res(), cols = PF.filter(p => pcols.includes(p[0]));
+  if (!cols.length) { $("#pm").textContent = "কমপক্ষে একটি তথ্যে tick দিন"; return; }
+  if (!r.length) { $("#pm").textContent = "Print করার মতো কোনো তথ্য নেই"; return; }
+  $("#pm").textContent = "";
+  const f = [["fd","Division"],["fi","District"],["fu","Upazila/Thana"],["fh","Hospital"],["fc","Category"],["fs","Designation"]].map(([i, l]) => $("#" + i).value ? l + ": " + $("#" + i).value : "").filter(Boolean).join(" | ");
+  $("#pa").innerHTML = `<h2 style="margin:0">BD Nurses Directory</h2><p style="margin:4px 0 10px">${esc(f || "All records")} — মোট: ${r.length} জন — ${new Date().toLocaleDateString("en-GB")}</p><table><thead><tr><th>#</th>${cols.map(c => `<th>${c[1]}</th>`).join("")}</tr></thead><tbody>${r.map((x, n) => `<tr><td>${n + 1}</td>${cols.map(c => `<td>${esc(gv(x, c[0]))}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  $("#pv").innerHTML = $("#pa").innerHTML;
+  try { window.print(); } catch (e) { $("#pm").textContent = "এই browser এ print বন্ধ আছে"; }
+}
+function profView(x, extra = "") {
+  return `<div class="card">${x.photo ? `<img src="${x.photo}" alt="" class="avatar" style="float:right">` : ""}<b>${esc(x.name)}</b> <span class="tag">${esc(x.designation)}</span><br><span class="tag">${esc(x.category)}</span>${x.status && x.status !== "approved" ? `<span class="tag" style="background:#fef3c7;color:#92400e">${esc(x.status)}</span>` : ""}
+  <div class="mu" style="margin-top:6px">📞 <a href="tel:${esc(x.phone)}">${esc(x.phone)}</a> · BNMC: ${esc(x.bnmc)}<br>🏥 ${esc(x.workplace)}<br>📍 ${esc(x.upazila)}, ${esc(x.district)}, ${esc(x.division)}${x.address ? " — " + esc(x.address) : ""}<br>🎓 ${esc(x.education)}${x.eduInfo ? " (" + esc(x.eduInfo) + ")" : ""}<br>Father: ${esc(x.father)} · Mother: ${esc(x.mother)}<br>DOB: ${esc(x.dob)} · <b>PRL: ${esc(prl(x.dob))}</b><br>Joining Date: ${esc(x.joinDate || "—")}${x.email ? "<br>✉️ " + esc(x.email) : ""}</div>${extra}</div>`;
+}
+
+function meView() {
+  return (me.pendingEdit ? `<div class="note">⏳ আপনার তথ্য পরিবর্তনের অনুরোধ Admin approval এর অপেক্ষায় আছে</div>` : "") +
+    profView(me, `<input type="file" id="pf" accept="image/*" style="display:none" onchange="setPhoto(this)"><button class="s" onclick="$('#pf').click()">📷 ${me.photo ? "Profile picture পরিবর্তন করুন" : "Profile picture যোগ করুন (ঐচ্ছিক)"}</button>${me.photo ? `<button class="s" onclick="rmPhoto()">Picture মুছুন</button>` : ""}<button class="p" onclick="editing='${esc(me.phone)}';msg='';draw()">✏️ তথ্য Edit / বদলি Request</button>`);
+}
+function setPhoto(inp) {
+  const f = inp.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    const im = new Image();
+    im.onload = async () => {
+      const c = document.createElement("canvas"); c.width = c.height = 240;
+      const s = Math.min(im.width, im.height);
+      c.getContext("2d").drawImage(im, (im.width - s) / 2, (im.height - s) / 2, s, s, 0, 0, 240, 240);
+      await store.set(me.phone, { ...me, photo: c.toDataURL("image/jpeg", 0.8) });
+      note = "Profile picture সেভ হয়েছে ✅"; draw();
+    };
+    im.onerror = () => { note = "ছবি পড়া যায়নি"; draw(); };
+    im.src = r.result;
+  };
+  r.readAsDataURL(f);
+}
+async function rmPhoto() { await store.set(me.phone, { ...me, photo: null }); note = "Picture মুছে ফেলা হয়েছে"; draw(); }
+
+function pendView(scopedUsers) {
+  const reg = scopedUsers.filter(x => x.status === "pending");
+  const eds = scopedUsers.filter(x => x.status === "approved" && x.pendingEdit);
+  const rsts = scopedUsers.filter(x => x.resetReq);
+  const B = (a, b) => `<div class="act"><button style="background:#0f766e" onclick="${a}">Approve</button><button style="background:#b42318" onclick="${b}">Reject</button></div>`;
+  return (me.role !== "admin" ? `<p class="mu"><b>দায়িত্বপ্রাপ্ত এলাকা:</b> ${esc(scopeLabel(me))}</p>` : "") +
+    `<h4>নতুন নিবন্ধন (${reg.length})</h4>` + (reg.map(x => profView(x, B(`setSt('${esc(x.phone)}','approved')`, `setSt('${esc(x.phone)}','rejected')`))).join("") || `<p class="mu">কোনো pending আবেদন নেই</p>`) +
+    `<h4>তথ্য পরিবর্তন / বদলির অনুরোধ (${eds.length})</h4>` + (eds.map(x => profView({ ...x, ...x.pendingEdit }, `<p class="mu">পুরাতন কর্মস্থল: ${esc(x.workplace)} (${esc(x.district)})</p>` + B(`setEd('${esc(x.phone)}',1)`, `setEd('${esc(x.phone)}',0)`))).join("") || `<p class="mu">কোনো অনুরোধ নেই</p>`) +
+    `<h4>Password reset অনুরোধ (${rsts.length})</h4>` + (rsts.map(x => `<div class="card"><b>${esc(x.name)}</b> · ${esc(x.phone)}<br><span class="mu">${esc(x.designation)}, ${esc(x.workplace)}</span><div class="act"><button style="background:#0f766e" onclick="doReset('${esc(x.phone)}')">Reset Password</button><button style="background:#b42318" onclick="clrReset('${esc(x.phone)}')">Reject</button></div></div>`).join("") || `<p class="mu">কোনো অনুরোধ নেই</p>`);
+}
+async function doReset(p) { await store.set(p, { ...all.find(x => x.phone === p), pw: await H("1234"), mustChange: true, resetReq: null }); note = "Password reset হয়েছে ✅ ইউজার পরবর্তী login এ নতুন password দেবে"; draw(); }
+async function clrReset(p) { await store.set(p, { ...all.find(x => x.phone === p), resetReq: null }); }
+async function setSt(p, s) { await store.set(p, { ...all.find(x => x.phone === p), status: s }); note = s === "approved" ? "আবেদন Approve হয়েছে ✅" : "আবেদন Reject করা হয়েছে"; draw(); }
+async function setEd(p, ok) {
+  const u = all.find(x => x.phone === p);
+  await store.set(p, ok ? { ...u, ...u.pendingEdit, pendingEdit: null } : { ...u, pendingEdit: null });
+  note = ok ? "তথ্য পরিবর্তন Approve হয়েছে ✅" : "পরিবর্তন Reject করা হয়েছে"; draw();
+}
+
+function allView(scopedUsers) {
+  const ap = scopedUsers.filter(x => x.status === "approved");
+  const canDel = me.role === "admin" || me.role === "subadmin";
+  const mgrs = all.filter(x => (x.role === "subadmin" || x.role === "editor") && x.phone !== "admin");
+  const ej = getEmailJsConfig() || { service_id: "", template_id: "", public_key: "" };
+  const tRow = all.find(x => x.phone === "__news_ticker__");
+  const tVal = (tRow && tRow.name) || DEFAULT_TICKER;
+
+  let adminControls = "";
+  if (me.role === "admin") {
+    adminControls = `
+    <details class="card"><summary><b>📢 News Ticker আপডেট করুন</b></summary>
+      <label>উপরের News Ticker বার্তা</label><textarea id="nt_inp" rows="2">${esc(tVal)}</textarea>
+      <button class="p" onclick="saveTicker()">News Ticker সেভ করুন</button>
+    </details>
+    <details class="card" ${editingMgrId ? "open" : ""}><summary><b>🛡️ Admin / Editor পরিচালনা (${mgrs.length})</b></summary>
+      <p class="mu">${editingMgrId ? `সম্পাদনা করছেন (ID: ${esc(editingMgrId)})` : "Division, District, Upazila/Thana বা Hospital অনুযায়ী নতুন Admin / Editor তৈরি করুন (খালি রাখলে সব এলাকা প্রযোজ্য):"}</p>
+      <label>Role</label><select id="m_role"><option value="subadmin">Admin (Scoped)</option><option value="editor">Editor</option></select>
+      <label>Login ID (Phone/Username) *</label><input id="m_id" ${editingMgrId ? "readonly" : ""}>
+      <label>Name *</label><input id="m_name">
+      <label>${editingMgrId ? "New Password (অপরিবর্তিত রাখতে খালি রাখুন)" : "Password (খালি রাখলে 1234)"}</label><input id="m_pw">
+      <div class="row">
+        <div><label>Scope Division</label><select id="m_dv" onchange="mdv()">${opt(Object.keys(DIV), "All divisions")}</select></div>
+        <div><label>Scope District</label><select id="m_di" onchange="mdi()">${opt(ALLD, "All districts")}</select></div>
+      </div>
+      <label>Scope Upazila/Thana</label><div id="m_upw"><input id="m_up" placeholder="All upazila/thana"></div>
+      <label>Scope Hospital / Working Place (optional)</label><input id="m_wp">
+      <div class="act"><button style="background:#0f766e" onclick="saveMgr()">${editingMgrId ? "আপডেট করুন" : "Admin / Editor যোগ করুন"}</button>${editingMgrId ? `<button style="background:#6b7280" onclick="editingMgrId=null;draw()">Cancel</button>` : ""}</div>
+      <div class="msg">${esc(msg)}</div>
+      ${mgrs.map(m => `<div style="border-top:1px solid var(--bd);margin-top:10px;padding-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div><b>${esc(m.name)}</b> (${esc(m.phone)}) — ${m.role === "subadmin" ? "Admin" : "Editor"}<br><span class="mu">Scope: ${esc(scopeLabel(m))}</span></div>
+        <div style="display:flex;gap:6px"><button class="s" style="width:auto;margin:0" onclick="editMgr('${esc(m.phone)}')">Edit</button><button class="s" style="width:auto;margin:0;border-color:var(--er);color:var(--er)" onclick="del('${esc(m.phone)}')">Del</button></div>
+      </div>`).join("")}
+    </details>
+    <details class="card"><summary><b>✉️ Email Password Recovery (EmailJS)</b></summary>
+      <p class="mu">এখানে EmailJS তথ্য সেভ করলে সব ডিভাইসে (Web ও Android) ইমেইলে ৬ ডিজিটের কোড কাজ করবে।</p>
+      <label>EmailJS Service ID</label><input id="ej_sid" value="${esc(ej.service_id)}">
+      <label>EmailJS Template ID</label><input id="ej_tid" value="${esc(ej.template_id)}">
+      <label>EmailJS Public Key</label><input id="ej_pk" value="${esc(ej.public_key)}">
+      <button class="p" onclick="saveEmailJs()">EmailJS সেটিংস সেভ করুন</button>
+    </details>`;
+  }
+
+  setTimeout(() => { if (editingMgrId) fillMgrForm(all.find(x => x.phone === editingMgrId)); }, 0);
+
+  return `<button class="p" style="margin-top:0;margin-bottom:12px" onclick="addingByManager=true;editing=null;formPhoto=null;msg='';draw()">➕ নতুন নার্স যোগ করুন (Add Nurse)</button>` +
+    adminControls +
+    `<div class="card">${me.role !== "admin" ? `<div class="mu"><b>এলাকা:</b> ${esc(scopeLabel(me))}</div>` : ""}<b>মোট নিবন্ধিত:</b> ${scopedUsers.length} · <b>Approved:</b> ${ap.length}<br>` +
+    Object.keys(CAT).map(c => `${c}: ${ap.filter(x => x.category === c).length}`).join("<br>") + `</div>` +
+    scopedUsers.map(x => profView(x, `<div class="act"><button style="background:#0f766e" onclick="editing='${esc(x.phone)}';msg='';draw()">Edit</button><button style="background:#6b7280" onclick="rst('${esc(x.phone)}')">Reset Password</button>${canDel ? `<button style="background:#b42318" onclick="del('${esc(x.phone)}')">Delete</button>` : ""}</div>`)).join("");
+}
+
+function mdv() { $("#m_di").innerHTML = opt(DIV[$("#m_dv").value] || ALLD, "All districts"); mdi(); }
+function mdi() {
+  const u = UPA[$("#m_di").value];
+  $("#m_upw").innerHTML = u ? `<select id="m_up">${opt(u.concat(["Other"]), "All upazila/thana")}</select>` : `<input id="m_up" placeholder="All upazila/thana">`;
+}
+function editMgr(id) { editingMgrId = id; msg = ""; draw(); }
+function fillMgrForm(m) {
+  if (!m || !$("#m_id")) return;
+  $("#m_role").value = m.role === "subadmin" ? "subadmin" : "editor";
+  $("#m_id").value = m.phone;
+  $("#m_name").value = m.name;
+  $("#m_pw").value = "";
+  $("#m_dv").value = m.scopeDivision || ""; mdv();
+  $("#m_di").value = m.scopeDistrict || ""; mdi();
+  if ($("#m_up")) $("#m_up").value = m.scopeUpazila || "";
+  $("#m_wp").value = m.scopeWorkplace || "";
+}
+async function saveMgr() {
+  const id = ($("#m_id").value || "").trim(), name = ($("#m_name").value || "").trim(), pw = ($("#m_pw").value || "").trim();
+  const role = $("#m_role").value, dvVal = $("#m_dv").value, diVal = $("#m_di").value, upVal = ($("#m_up") ? $("#m_up").value : "").trim(), wpVal = ($("#m_wp").value || "").trim();
+  if (!id || !name || ["admin", "__news_ticker__", "__emailjs_config__"].includes(id)) { msg = "সঠিক ID এবং Name দিন"; return draw(); }
+  const isUpd = !!editingMgrId;
+  const ex = all.find(x => x.phone === id);
+  if (!isUpd && ex) { msg = "এই ID আগেই ব্যবহৃত হয়েছে"; return draw(); }
+  if (pw && pw.length < 4) { msg = "Password কমপক্ষে ৪ অক্ষরের হতে হবে"; return draw(); }
+  let pwHash, mustCh;
+  if (isUpd && ex) {
+    pwHash = pw ? await H(pw) : ex.pw;
+    mustCh = pw ? (pw === "1234") : ex.mustChange;
+  } else {
+    const raw = pw || "1234";
+    pwHash = await H(raw);
+    mustCh = raw === "1234";
+  }
+  editingMgrId = null; msg = "";
+  await store.set(id, {
+    phone: id, role, status: "approved", pw: pwHash, mustChange: mustCh, name,
+    scopeDivision: dvVal, scopeDistrict: diVal, scopeUpazila: upVal, scopeWorkplace: wpVal,
+    createdAt: (ex && ex.createdAt) || new Date().toISOString()
+  });
+  note = `${role === "subadmin" ? "Admin" : "Editor"} ${isUpd ? "আপডেট" : "যোগ"} করা হয়েছে ✅ (ID: ${id})`;
+  draw();
+}
+async function saveTicker() {
+  const txt = ($("#nt_inp").value || "").trim() || DEFAULT_TICKER;
+  await store.set("__news_ticker__", { phone: "__news_ticker__", role: "config", status: "approved", pw: "", mustChange: false, name: txt });
+  note = "News Ticker আপডেট হয়েছে ✅"; draw();
+}
+async function saveEmailJs() {
+  const s = ($("#ej_sid").value || "").trim(), t = ($("#ej_tid").value || "").trim(), p = ($("#ej_pk").value || "").trim();
+  if (!s || !t || !p) { msg = "Service ID, Template ID এবং Public Key তিনটিই দিন"; return draw(); }
+  await store.set("__emailjs_config__", {
+    phone: "__emailjs_config__", role: "config", status: "approved", pw: "", mustChange: false,
+    name: "EmailJS Config", address: JSON.stringify({ service_id: s, template_id: t, public_key: p })
+  });
+  note = "Email Recovery (EmailJS) সেটিংস সব ডিভাইসের জন্য সেভ হয়েছে ✅"; draw();
+}
+async function del(p) { if (confirm("এই ইউজারকে স্থায়ীভাবে Delete করবেন?")) await store.del(p); }
+async function rst(p) {
+  if (confirm("Password default (1234) এ reset করবেন? ইউজারকে পরবর্তী login এ বদলাতে হবে।")) {
+    await store.set(p, { ...all.find(x => x.phone === p), pw: await H("1234"), mustChange: true });
+    note = "Password reset হয়েছে ✅"; draw();
+  }
+}
+
 init();
-</script></body></html>
+</script>
+</body>
+</html>

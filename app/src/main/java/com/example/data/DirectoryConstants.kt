@@ -6,6 +6,9 @@ import java.util.Calendar
 import java.util.Locale
 
 object DirectoryConstants {
+  const val DEFAULT_NEWS_TICKER =
+    "🩺 BD Nurses Directory-তে স্বাগতম — নতুন নিবন্ধন ও তথ্য পরিবর্তনের জন্য অনুগ্রহ করে সঠিক তথ্য প্রদান করুন।"
+
   val DIVISIONS: Map<String, List<String>> =
     linkedMapOf(
       "Dhaka" to
@@ -83,16 +86,556 @@ object DirectoryConstants {
 
   val UPAZILAS: Map<String, List<String>> =
     mapOf(
-      "Dhaka" to listOf("Savar", "Dhamrai", "Keraniganj", "Nawabganj", "Dohar", "Dhaka Metro (Thana)"),
-      "Gazipur" to listOf("Gazipur Sadar", "Kaliakair", "Kapasia", "Sreepur", "Kaliganj"),
+      // Dhaka Division
+      "Dhaka" to
+        listOf(
+          "Dhamrai",
+          "Dohar",
+          "Keraniganj",
+          "Nawabganj",
+          "Savar",
+          "Dhaka Metro (Thana)",
+          "Dhanmondi",
+          "Gulshan",
+          "Mirpur",
+          "Mohammadpur",
+          "Motijheel",
+          "Shahbagh",
+          "Tejgaon",
+          "Uttara",
+        ),
+      "Gazipur" to
+        listOf("Gazipur Sadar", "Kaliakair", "Kaliganj", "Kapasia", "Sreepur", "Tongi"),
+      "Narayanganj" to
+        listOf(
+          "Araihazar",
+          "Bandar",
+          "Narayanganj Sadar",
+          "Rupganj",
+          "Sonargaon",
+          "Fatullah",
+          "Siddhirganj",
+        ),
+      "Narsingdi" to
+        listOf("Belabo", "Monohardi", "Narsingdi Sadar", "Palash", "Raipura", "Shibpur"),
+      "Manikganj" to
+        listOf("Daulatpur", "Ghior", "Harirampur", "Manikganj Sadar", "Saturia", "Shivalaya", "Singair"),
+      "Munshiganj" to
+        listOf("Gazaria", "Lohajang", "Munshiganj Sadar", "Sirajdikhan", "Sreenagar", "Tongibari"),
+      "Tangail" to
+        listOf(
+          "Basail",
+          "Bhuapur",
+          "Delduar",
+          "Dhanbari",
+          "Ghatail",
+          "Gopalpur",
+          "Kalihati",
+          "Madhupur",
+          "Mirzapur",
+          "Nagarpur",
+          "Sakhipur",
+          "Tangail Sadar",
+        ),
+      "Kishoreganj" to
+        listOf(
+          "Austagram",
+          "Bajitpur",
+          "Bhairab",
+          "Hossainpur",
+          "Itna",
+          "Karimganj",
+          "Katiadi",
+          "Kishoreganj Sadar",
+          "Kuliarchar",
+          "Mithamain",
+          "Nikli",
+          "Pakundia",
+          "Tarail",
+        ),
+      "Faridpur" to
+        listOf(
+          "Alfadanga",
+          "Bhanga",
+          "Boalmari",
+          "Charbhadrasan",
+          "Faridpur Sadar",
+          "Madhukhali",
+          "Nagarkanda",
+          "Sadarpur",
+          "Saltha",
+        ),
+      "Gopalganj" to
+        listOf("Gopalganj Sadar", "Kashiani", "Kotalipara", "Muksudpur", "Tungipara"),
+      "Madaripur" to listOf("Dasar", "Kalkini", "Madaripur Sadar", "Rajoir", "Shibchar"),
+      "Rajbari" to listOf("Baliakandi", "Goalandaghat", "Kalukhali", "Pangsha", "Rajbari Sadar"),
+      "Shariatpur" to
+        listOf("Bhedarganj", "Damudya", "Gosairhat", "Naria", "Shariatpur Sadar", "Zajira"),
+
+      // Chattogram Division
       "Chattogram" to
-        listOf("Hathazari", "Raozan", "Sitakunda", "Patiya", "Chattogram Metro (Thana)"),
-      "Rajshahi" to listOf("Paba", "Godagari", "Mohanpur", "Rajshahi Metro (Thana)"),
-      "Khulna" to listOf("Dumuria", "Batiaghata", "Dacope", "Khulna Metro (Thana)"),
-      "Sylhet" to listOf("Sylhet Sadar", "Beanibazar", "Jaintiapur", "Golapganj"),
-      "Rangpur" to listOf("Rangpur Sadar", "Mithapukur", "Badarganj", "Pirganj"),
-      "Barishal" to listOf("Barishal Sadar", "Bakerganj", "Babuganj", "Gournadi"),
-      "Mymensingh" to listOf("Mymensingh Sadar", "Trishal", "Muktagachha", "Phulpur"),
+        listOf(
+          "Anwara",
+          "Banshkhali",
+          "Boalkhali",
+          "Chandanaish",
+          "Fatikchhari",
+          "Hathazari",
+          "Karnaphuli",
+          "Lohagara",
+          "Mirsharai",
+          "Patiya",
+          "Rangunia",
+          "Raozan",
+          "Sandwip",
+          "Satkania",
+          "Sitakunda",
+          "Chattogram Metro (Thana)",
+        ),
+      "Cox's Bazar" to
+        listOf(
+          "Chakaria",
+          "Cox's Bazar Sadar",
+          "Eidgaon",
+          "Kutubdia",
+          "Maheshkhali",
+          "Pekua",
+          "Ramu",
+          "Teknaf",
+          "Ukhia",
+        ),
+      "Cumilla" to
+        listOf(
+          "Barura",
+          "Brahmanpara",
+          "Burichang",
+          "Chandina",
+          "Chauddagram",
+          "Cumilla Adarsha Sadar",
+          "Cumilla Sadar Dakshin",
+          "Daudkandi",
+          "Debidwar",
+          "Homna",
+          "Laksam",
+          "Lalmai",
+          "Meghna",
+          "Monohorgonj",
+          "Muradnagar",
+          "Nangalkot",
+          "Titas",
+        ),
+      "Feni" to
+        listOf("Chhagalnaiya", "Daganbhuiyan", "Feni Sadar", "Fulgazi", "Parshuram", "Sonagazi"),
+      "Brahmanbaria" to
+        listOf(
+          "Akhaura",
+          "Ashuganj",
+          "Bancharampur",
+          "Bijoynagar",
+          "Brahmanbaria Sadar",
+          "Kasba",
+          "Nabinagar",
+          "Nasirnagar",
+          "Sarail",
+        ),
+      "Noakhali" to
+        listOf(
+          "Begumganj",
+          "Chatkhil",
+          "Companiganj",
+          "Hatiya",
+          "Kabirhat",
+          "Noakhali Sadar",
+          "Senbagh",
+          "Sonaimuri",
+          "Subarnachar",
+        ),
+      "Lakshmipur" to
+        listOf("Kamalnagar", "Lakshmipur Sadar", "Raipur", "Ramganj", "Ramgati"),
+      "Chandpur" to
+        listOf(
+          "Chandpur Sadar",
+          "Faridganj",
+          "Haimchar",
+          "Haziganj",
+          "Kachua",
+          "Matlab Dakshin",
+          "Matlab Uttar",
+          "Shahrasti",
+        ),
+      "Rangamati" to
+        listOf(
+          "Baghaichhari",
+          "Barkal",
+          "Belaichhari",
+          "Juraichhari",
+          "Kaptai",
+          "Kawkhali",
+          "Langadu",
+          "Naniarchar",
+          "Rajasthali",
+          "Rangamati Sadar",
+        ),
+      "Khagrachhari" to
+        listOf(
+          "Dighinala",
+          "Guimara",
+          "Khagrachhari Sadar",
+          "Lakshmichhari",
+          "Mahalchhari",
+          "Manikchhari",
+          "Matiranga",
+          "Panchhari",
+          "Ramgarh",
+        ),
+      "Bandarban" to
+        listOf(
+          "Alikadam",
+          "Bandarban Sadar",
+          "Lama",
+          "Naikhongchhari",
+          "Rowangchhari",
+          "Ruma",
+          "Thanchi",
+        ),
+
+      // Rajshahi Division
+      "Rajshahi" to
+        listOf(
+          "Bagha",
+          "Bagmara",
+          "Charghat",
+          "Durgapur",
+          "Godagari",
+          "Mohanpur",
+          "Paba",
+          "Puthia",
+          "Tanore",
+          "Rajshahi Metro (Thana)",
+        ),
+      "Bogura" to
+        listOf(
+          "Adamdighi",
+          "Bogura Sadar",
+          "Dhunat",
+          "Dhupchanchia",
+          "Gabtali",
+          "Kahaloo",
+          "Nandigram",
+          "Sariakandi",
+          "Shajahanpur",
+          "Sherpur",
+          "Shibganj",
+          "Sonatala",
+        ),
+      "Pabna" to
+        listOf(
+          "Atgharia",
+          "Bera",
+          "Bhangura",
+          "Chatmohar",
+          "Faridpur",
+          "Ishwardi",
+          "Pabna Sadar",
+          "Santhia",
+          "Sujanagar",
+        ),
+      "Sirajganj" to
+        listOf(
+          "Belkuchi",
+          "Chauhali",
+          "Kamarkhanda",
+          "Kazipur",
+          "Raiganj",
+          "Shahjadpur",
+          "Sirajganj Sadar",
+          "Tarash",
+          "Ullahpara",
+        ),
+      "Natore" to
+        listOf("Bagatipara", "Baraigram", "Gurudaspur", "Lalpur", "Naldanga", "Natore Sadar", "Singra"),
+      "Naogaon" to
+        listOf(
+          "Atrai",
+          "Badalgachhi",
+          "Dhamoirhat",
+          "Manda",
+          "Mohadevpur",
+          "Naogaon Sadar",
+          "Niamatpur",
+          "Patnitala",
+          "Porsha",
+          "Raninagar",
+          "Sapahar",
+        ),
+      "Chapainawabganj" to
+        listOf("Bholahat", "Chapainawabganj Sadar", "Gomastapur", "Nachole", "Shibganj"),
+      "Joypurhat" to
+        listOf("Akkelpur", "Joypurhat Sadar", "Kalai", "Khetlal", "Panchbibi"),
+
+      // Khulna Division
+      "Khulna" to
+        listOf(
+          "Batiaghata",
+          "Dacope",
+          "Dighalia",
+          "Dumuria",
+          "Koyra",
+          "Paikgachha",
+          "Phultala",
+          "Rupsha",
+          "Terokhada",
+          "Khulna Metro (Thana)",
+        ),
+      "Jashore" to
+        listOf(
+          "Abhaynagar",
+          "Bagherpara",
+          "Chaugachha",
+          "Jashore Sadar",
+          "Jhikargachha",
+          "Keshabpur",
+          "Manirampur",
+          "Sharsha",
+        ),
+      "Satkhira" to
+        listOf("Assasuni", "Debhata", "Kalaroa", "Kaliganj", "Satkhira Sadar", "Shyamnagar", "Tala"),
+      "Bagerhat" to
+        listOf(
+          "Bagerhat Sadar",
+          "Chitalmari",
+          "Fakirhat",
+          "Kachua",
+          "Mollahat",
+          "Mongla",
+          "Morrelganj",
+          "Rampal",
+          "Sarankhola",
+        ),
+      "Narail" to listOf("Kalia", "Lohagara", "Narail Sadar"),
+      "Magura" to listOf("Magura Sadar", "Mohammadpur", "Shalikha", "Sreepur"),
+      "Jhenaidah" to
+        listOf(
+          "Harinakunda",
+          "Jhenaidah Sadar",
+          "Kaliganj",
+          "Kotchandpur",
+          "Maheshpur",
+          "Shailkupa",
+        ),
+      "Kushtia" to
+        listOf("Bheramara", "Daulatpur", "Khoksa", "Kumarkhali", "Kushtia Sadar", "Mirpur"),
+      "Chuadanga" to listOf("Alamdanga", "Chuadanga Sadar", "Damurhuda", "Jibannagar"),
+      "Meherpur" to listOf("Gangni", "Meherpur Sadar", "Mujibnagar"),
+
+      // Barishal Division
+      "Barishal" to
+        listOf(
+          "Agailjhara",
+          "Babuganj",
+          "Bakerganj",
+          "Banaripara",
+          "Barishal Sadar",
+          "Gaurnadi",
+          "Hizla",
+          "Mehendiganj",
+          "Muladi",
+          "Wazirpur",
+          "Barishal Metro (Thana)",
+        ),
+      "Bhola" to
+        listOf(
+          "Bhola Sadar",
+          "Borhanuddin",
+          "Char Fasson",
+          "Daulatkhan",
+          "Lalmohan",
+          "Manpura",
+          "Tazumuddin",
+        ),
+      "Patuakhali" to
+        listOf(
+          "Bauphal",
+          "Dashmina",
+          "Dumki",
+          "Galachipa",
+          "Kalapara",
+          "Mirzaganj",
+          "Patuakhali Sadar",
+          "Rangabali",
+        ),
+      "Pirojpur" to
+        listOf(
+          "Bhandaria",
+          "Indurkani",
+          "Kawkhali",
+          "Mathbaria",
+          "Nazirpur",
+          "Nesarabad (Swarupkathi)",
+          "Pirojpur Sadar",
+        ),
+      "Jhalokati" to listOf("Jhalokati Sadar", "Kathalia", "Nalchity", "Rajapur"),
+      "Barguna" to
+        listOf("Amtali", "Bamna", "Barguna Sadar", "Betagi", "Patharghata", "Taltali"),
+
+      // Sylhet Division
+      "Sylhet" to
+        listOf(
+          "Balaganj",
+          "Beanibazar",
+          "Bishwanath",
+          "Companiganj",
+          "Dakshin Surma",
+          "Fenchuganj",
+          "Golapganj",
+          "Gowainghat",
+          "Jaintiapur",
+          "Kanaighat",
+          "Osmani Nagar",
+          "Sylhet Sadar",
+          "Zakiganj",
+          "Sylhet Metro (Thana)",
+        ),
+      "Moulvibazar" to
+        listOf(
+          "Barlekha",
+          "Juri",
+          "Kamalganj",
+          "Kulaura",
+          "Moulvibazar Sadar",
+          "Rajnagar",
+          "Sreemangal",
+        ),
+      "Habiganj" to
+        listOf(
+          "Ajmiriganj",
+          "Bahubal",
+          "Baniyachong",
+          "Chunarughat",
+          "Habiganj Sadar",
+          "Lakhai",
+          "Madhabpur",
+          "Nabiganj",
+          "Shayestaganj",
+        ),
+      "Sunamganj" to
+        listOf(
+          "Bishwamvarpur",
+          "Chhatak",
+          "Derai",
+          "Dharamapasha",
+          "Dowarabazar",
+          "Jagannathpur",
+          "Jamalganj",
+          "Madhyanagar",
+          "Shalla",
+          "Shantiganj",
+          "Sunamganj Sadar",
+          "Tahirpur",
+        ),
+
+      // Rangpur Division
+      "Rangpur" to
+        listOf(
+          "Badarganj",
+          "Gangachhara",
+          "Kaunia",
+          "Mithapukur",
+          "Pirgachha",
+          "Pirganj",
+          "Rangpur Sadar",
+          "Taraganj",
+          "Rangpur Metro (Thana)",
+        ),
+      "Dinajpur" to
+        listOf(
+          "Birampur",
+          "Birganj",
+          "Biral",
+          "Bochaganj",
+          "Chirirbandar",
+          "Dinajpur Sadar",
+          "Fulbari",
+          "Ghoraghat",
+          "Hakimpur",
+          "Kaharole",
+          "Khansama",
+          "Nawabganj",
+          "Parbatipur",
+        ),
+      "Kurigram" to
+        listOf(
+          "Bhurungamari",
+          "Char Rajibpur",
+          "Chilmari",
+          "Kurigram Sadar",
+          "Nageshwari",
+          "Phulbari",
+          "Rajarhat",
+          "Raomari",
+          "Ulipur",
+        ),
+      "Gaibandha" to
+        listOf(
+          "Fulchhari",
+          "Gaibandha Sadar",
+          "Gobindaganj",
+          "Palashbari",
+          "Sadullapur",
+          "Saghata",
+          "Sundarganj",
+        ),
+      "Nilphamari" to
+        listOf("Dimla", "Domar", "Jaldhaka", "Kishoreganj", "Nilphamari Sadar", "Saidpur"),
+      "Lalmonirhat" to
+        listOf("Aditmari", "Hatibandha", "Kaliganj", "Lalmonirhat Sadar", "Patgram"),
+      "Thakurgaon" to
+        listOf("Baliadangi", "Haripur", "Pirganj", "Ranisankail", "Thakurgaon Sadar"),
+      "Panchagarh" to
+        listOf("Atwari", "Boda", "Debiganj", "Panchagarh Sadar", "Tetulia"),
+
+      // Mymensingh Division
+      "Mymensingh" to
+        listOf(
+          "Bhaluka",
+          "Dhobaura",
+          "Fulbaria",
+          "Gafargaon",
+          "Gauripur",
+          "Haluaghat",
+          "Ishwarganj",
+          "Muktagachha",
+          "Mymensingh Sadar",
+          "Nandail",
+          "Phulpur",
+          "Tara Khanda",
+          "Trishal",
+          "Mymensingh Metro (Thana)",
+        ),
+      "Jamalpur" to
+        listOf(
+          "Bakshiganj",
+          "Dewanganj",
+          "Islampur",
+          "Jamalpur Sadar",
+          "Madarganj",
+          "Melandaha",
+          "Sarishabari",
+        ),
+      "Sherpur" to listOf("Jhenaigati", "Nakla", "Nalitabari", "Sherpur Sadar", "Sreebardi"),
+      "Netrokona" to
+        listOf(
+          "Atpara",
+          "Barhatta",
+          "Durgapur",
+          "Kalmakanda",
+          "Kendua",
+          "Khaliajuri",
+          "Madan",
+          "Mohanganj",
+          "Netrokona Sadar",
+          "Purbadhala",
+        ),
     )
 
   val CATEGORIES: Map<String, List<String>> =

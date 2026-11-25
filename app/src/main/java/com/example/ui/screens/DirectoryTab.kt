@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.PeopleOutline
@@ -58,11 +59,13 @@ fun DirectoryTab(
   onTogglePrintCol: (String, Boolean) -> Unit,
   onSetAllPrintCols: (Boolean) -> Unit,
   onPrintError: (String) -> Unit,
+  onEditUser: (String) -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   val context = LocalContext.current
   val filtered = state.filteredNurses
-  val isAdmin = state.currentUser?.role == "admin"
+  val currentManager = state.currentUser
+  val isAdmin = currentManager?.isManagerRole == true
   var showPrintOptions by rememberSaveable { mutableStateOf(true) }
 
   val districtOptions =
@@ -350,7 +353,24 @@ fun DirectoryTab(
       }
     } else {
       items(items = filtered, key = { it.phone }) { nurse ->
-        NurseProfileCard(nurse = nurse)
+        val canEditHere = currentManager?.canManageNurse(nurse) == true
+        NurseProfileCard(
+          nurse = nurse,
+          footerContent =
+            if (canEditHere) {
+              {
+                OutlinedButton(
+                  onClick = { onEditUser(nurse.phone) },
+                  modifier =
+                    Modifier.fillMaxWidth().height(48.dp).testTag("dir_edit_${nurse.phone}"),
+                ) {
+                  Icon(Icons.Filled.Edit, contentDescription = null)
+                  Spacer(modifier = Modifier.size(8.dp))
+                  Text("তথ্য Edit করুন")
+                }
+              }
+            } else null,
+        )
       }
     }
   }

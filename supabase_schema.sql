@@ -29,8 +29,22 @@ create table if not exists public.nurses (
   photo text,
   pending_edit jsonb,
   reset_req jsonb,
+  scope_division text not null default '',
+  scope_district text not null default '',
+  scope_upazila text not null default '',
+  scope_workplace text not null default '',
+  recovery_code text not null default '',
+  recovery_exp text not null default '',
   created_at timestamptz not null default now()
 );
+
+-- Safe migrations for existing installations
+alter table public.nurses add column if not exists scope_division text not null default '';
+alter table public.nurses add column if not exists scope_district text not null default '';
+alter table public.nurses add column if not exists scope_upazila text not null default '';
+alter table public.nurses add column if not exists scope_workplace text not null default '';
+alter table public.nurses add column if not exists recovery_code text not null default '';
+alter table public.nurses add column if not exists recovery_exp text not null default '';
 
 -- Grant API access to anon and authenticated roles
 grant usage on schema public to anon, authenticated;
@@ -40,7 +54,6 @@ grant all on table public.nurses to anon, authenticated;
 alter table public.nurses enable row level security;
 
 -- Public directory access policy (required for client-side phone/SHA-256 auth flow)
--- Note: For higher security in production, consider migrating to Supabase Auth + Edge Functions.
 drop policy if exists "Allow anon directory access" on public.nurses;
 create policy "Allow anon directory access"
   on public.nurses
@@ -49,7 +62,7 @@ create policy "Allow anon directory access"
   using (true)
   with check (true);
 
--- Seed default Administrator account (ID: admin, Default Password: admin123)
+-- Seed default Global Administrator account (ID: admin, Default Password: admin123)
 insert into public.nurses (phone, role, name, pw, must_change, status)
 values (
   'admin',
@@ -57,6 +70,18 @@ values (
   'Administrator',
   '555b047b8e2c41bad0c4a365150d6ce30d51875fee13d718b8c6898860eea654',
   true,
+  'approved'
+)
+on conflict (phone) do nothing;
+
+-- Seed default News Ticker config row
+insert into public.nurses (phone, role, name, pw, must_change, status)
+values (
+  '__news_ticker__',
+  'config',
+  '🩺 BD Nurses Directory-তে স্বাগতম — নতুন নিবন্ধন ও তথ্য পরিবর্তনের জন্য অনুগ্রহ করে সঠিক তথ্য প্রদান করুন।',
+  '',
+  false,
   'approved'
 )
 on conflict (phone) do nothing;

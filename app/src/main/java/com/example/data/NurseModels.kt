@@ -34,7 +34,7 @@ data class ResetRequest(val at: String = "")
 @JsonClass(generateAdapter = true)
 data class NurseRecord(
   val phone: String = "",
-  val role: String = "user",
+  val role: String = "user", // "user", "admin", "subadmin", "editor", "config"
   val status: String = "pending",
   val pw: String = "",
   @Json(name = "must_change") val mustChange: Boolean = true,
@@ -60,8 +60,54 @@ data class NurseRecord(
   val photo: String? = null,
   @Json(name = "pending_edit") val pendingEdit: PendingEdit? = null,
   @Json(name = "reset_req") val resetReq: ResetRequest? = null,
+  @Json(name = "scope_division") val scopeDivision: String = "",
+  @Json(name = "scope_district") val scopeDistrict: String = "",
+  @Json(name = "scope_upazila") val scopeUpazila: String = "",
+  @Json(name = "scope_workplace") val scopeWorkplace: String = "",
+  @Json(name = "recovery_code") val recoveryCode: String = "",
+  @Json(name = "recovery_exp") val recoveryExp: String = "",
   @Json(name = "created_at") val createdAt: String? = null,
 ) {
+  val isGlobalAdmin: Boolean
+    get() = role == "admin"
+
+  val isManagerRole: Boolean
+    get() = role == "admin" || role == "subadmin" || role == "editor"
+
+  fun scopeLabel(): String {
+    if (role == "admin") return "All Bangladesh (Super Admin)"
+    val parts =
+      listOf(
+          scopeDivision,
+          scopeDistrict,
+          scopeUpazila,
+          scopeWorkplace,
+        )
+        .filter { it.isNotBlank() }
+    return if (parts.isEmpty()) "All Bangladesh" else parts.joinToString(" › ")
+  }
+
+  fun canManageNurse(nurse: NurseRecord): Boolean {
+    if (role == "admin") return true
+    if (role != "subadmin" && role != "editor") return false
+    if (scopeDivision.isNotBlank() && !nurse.division.equals(scopeDivision, ignoreCase = true)) {
+      return false
+    }
+    if (scopeDistrict.isNotBlank() && !nurse.district.equals(scopeDistrict, ignoreCase = true)) {
+      return false
+    }
+    if (scopeUpazila.isNotBlank() && !nurse.upazila.equals(scopeUpazila, ignoreCase = true)) {
+      return false
+    }
+    if (
+      scopeWorkplace.isNotBlank() &&
+        !nurse.workplace.contains(scopeWorkplace, ignoreCase = true)
+    ) {
+      return false
+    }
+    return true
+  }
+
   fun appliedPendingEdit(): NurseRecord {
     val pe = pendingEdit ?: return this
     return copy(
@@ -108,6 +154,7 @@ data class NurseFormDraft(
   val eduSub: String = "",
   val eduInfo: String = "",
   val email: String = "",
+  val photo: String? = null,
 ) {
   val computedEducation: String
     get() =
@@ -164,4 +211,35 @@ fun NurseRecord.toFormDraft(): NurseFormDraft =
     eduSub = eduSub,
     eduInfo = eduInfo,
     email = email,
+    photo = photo,
   )
+
+data class EmailJsConfig(
+  val serviceId: String = "",
+  val templateId: String = "",
+  val publicKey: String = "",
+) {
+  val isValid: Boolean
+    get() =
+      serviceId.isNotBlank() &&
+        !serviceId.contains("YOUR_EMAILJS", ignoreCase = true) &&
+        templateId.isNotBlank() &&
+        !templateId.contains("YOUR_EMAILJS", ignoreCase = true) &&
+        publicKey.isNotBlank() &&
+        !publicKey.contains("YOUR_EMAILJS", ignoreCase = true)
+}
+
+fun List<NurseRecord>.extractEmailJsConfig(): EmailJsConfig? {
+  val row = find { it.phone == "__emailjs_config__" && it.role == "config" } ?: return null
+  return try {
+    val obj = org.json.JSONObject(row.address)
+    EmailJsConfig(
+      serviceId = obj.optString("service_id", "").trim(),
+      templateId = obj.optString("template_id", "").trim(),
+      publicKey = obj.optString("public_key", "").trim(),
+    ).takeIf { it.isValid }
+  } catch (_: Exception) {
+    null
+  }
+}
+

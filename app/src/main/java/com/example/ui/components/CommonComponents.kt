@@ -3,8 +3,10 @@ package com.example.ui.components
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,13 +26,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocalHospital
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.WorkHistory
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
@@ -46,7 +53,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -66,6 +75,163 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import kotlinx.coroutines.delay
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun LiveClockAndNewsTickerBar(
+  tickerText: String,
+  isRealtimeConnected: Boolean = false,
+  modifier: Modifier = Modifier,
+) {
+  var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+
+  LaunchedEffect(Unit) {
+    while (true) {
+      nowMillis = System.currentTimeMillis()
+      delay(1000L)
+    }
+  }
+
+  val timeText = remember(nowMillis) {
+    SimpleDateFormat("HH:mm:ss", Locale.ENGLISH).format(Date(nowMillis))
+  }
+  val dateText = remember(nowMillis) {
+    SimpleDateFormat("dd MMM yyyy, EEE", Locale.ENGLISH).format(Date(nowMillis))
+  }
+
+  Surface(
+    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.92f),
+    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+    modifier = modifier.fillMaxWidth(),
+    shadowElevation = 2.dp,
+  ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+      Row(
+        modifier =
+          Modifier.fillMaxWidth()
+            .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.85f))
+            .padding(horizontal = 12.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+      ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Icon(
+            imageVector = Icons.Filled.Schedule,
+            contentDescription = "24-hour clock",
+            modifier = Modifier.size(15.dp),
+            tint = MaterialTheme.colorScheme.primary,
+          )
+          Spacer(modifier = Modifier.width(6.dp))
+          Text(
+            text = "$timeText (24H)",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+          )
+          Spacer(modifier = Modifier.width(8.dp))
+          Surface(
+            shape = RoundedCornerShape(99.dp),
+            color =
+              if (isRealtimeConnected) MaterialTheme.colorScheme.primary
+              else MaterialTheme.colorScheme.surfaceVariant,
+            contentColor =
+              if (isRealtimeConnected) MaterialTheme.colorScheme.onPrimary
+              else MaterialTheme.colorScheme.onSurfaceVariant,
+          ) {
+            Text(
+              text = if (isRealtimeConnected) "● LIVE" else "AUTO SYNC",
+              style = MaterialTheme.typography.labelSmall,
+              fontWeight = FontWeight.Bold,
+              modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
+            )
+          }
+        }
+        Text(
+          text = dateText,
+          style = MaterialTheme.typography.labelMedium,
+          fontWeight = FontWeight.Medium,
+          color = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
+      }
+
+      Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Surface(
+          shape = RoundedCornerShape(6.dp),
+          color = MaterialTheme.colorScheme.primary,
+          contentColor = MaterialTheme.colorScheme.onPrimary,
+        ) {
+          Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Icon(
+              imageVector = Icons.Filled.Campaign,
+              contentDescription = "News",
+              modifier = Modifier.size(14.dp),
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+              text = "NEWS",
+              style = MaterialTheme.typography.labelSmall,
+              fontWeight = FontWeight.Bold,
+            )
+          }
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+          text = tickerText,
+          style = MaterialTheme.typography.bodySmall,
+          fontWeight = FontWeight.Medium,
+          maxLines = 1,
+          modifier = Modifier.weight(1f).basicMarquee(iterations = Int.MAX_VALUE),
+        )
+      }
+    }
+  }
+}
+
+@Composable
+fun FirstLoginPasswordPromptDialog(
+  onChangeNow: () -> Unit,
+  onLater: () -> Unit,
+) {
+  AlertDialog(
+    onDismissRequest = onLater,
+    icon = {
+      Icon(
+        imageVector = Icons.Filled.Lock,
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.primary,
+      )
+    },
+    title = { Text("Password পরিবর্তন করুন") },
+    text = {
+      Text(
+        "আপনি এখনো default password ব্যবহার করছেন। নিরাপত্তার জন্য নতুন password সেট করতে পারেন অথবা 'পরে করব (Later)' দিয়ে চালিয়ে যেতে পারেন। Password পরিবর্তন না করা পর্যন্ত প্রতিবার লগইনে এই বার্তাটি দেখাবে।"
+      )
+    },
+    confirmButton = {
+      Button(
+        onClick = onChangeNow,
+        modifier = Modifier.testTag("prompt_change_password_button"),
+      ) {
+        Text("Change Now")
+      }
+    },
+    dismissButton = {
+      TextButton(
+        onClick = onLater,
+        modifier = Modifier.testTag("prompt_later_button"),
+      ) {
+        Text("পরে করব (Later)")
+      }
+    },
+  )
+}
 
 @Composable
 fun StatusBanner(
@@ -258,7 +424,10 @@ fun NurseProfileCard(
   Card(
     modifier = modifier.fillMaxWidth(),
     shape = RoundedCornerShape(16.dp),
-    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    colors =
+      CardDefaults.cardColors(
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)
+      ),
     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
   ) {
     Column(modifier = Modifier.padding(16.dp)) {
