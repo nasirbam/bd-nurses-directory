@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>BD Nurses Directory</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <style>
 :root{
   box-sizing:border-box;
@@ -227,13 +229,34 @@ button.s{
   z-index:1000;
 }
 .modal-box{
-  max-width:420px;
+  max-width:440px;
   width:100%;
+  max-height:90vh;
+  overflow-y:auto;
   background:var(--card);
   border:1px solid var(--bd);
   border-radius:16px;
   padding:18px;
   box-shadow:0 16px 40px rgba(0,0,0,0.22);
+}
+.qr-wrap{
+  background:#fff;
+  padding:14px;
+  border-radius:14px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--bd);
+  margin:10px auto;
+}
+.qr-wrap img,.qr-wrap canvas{display:block;width:210px;height:210px}
+.scan-video{
+  width:100%;
+  max-height:260px;
+  object-fit:cover;
+  border-radius:12px;
+  background:#000;
+  border:1px solid var(--bd);
 }
 #pa{display:none}
 #pv table{border-collapse:collapse;width:100%;font-size:12px}
@@ -258,7 +281,7 @@ button.s{
 </header>
 <div class="topbar-meta">
   <div class="clock-row">
-    <div>🕒 <span id="clk">--:--:-- (24H)</span><span id="liveBadge" class="live-pill">AUTO SYNC</span></div>
+    <div>🕒 <span id="clk">--:--:--</span><span id="liveBadge" class="live-pill">AUTO SYNC</span></div>
     <div id="dt">--</div>
   </div>
   <div class="ticker-row">
@@ -374,6 +397,9 @@ const H = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", ne
 let all = [], me = null, tab = "dir", msg = "", view = "login", editing = null, addingByManager = false, note = "";
 let formPhoto = null, showPwPrompt = false, recSent = false, recPhone = "", recMaskedEmail = "";
 let editingMgrId = null, rtConnected = false, ws = null, hbTimer = null, syncInFlight = false;
+let qrNursePhone = null, detailNursePhone = null, showQrScanModal = false, qrScanMsg = "";
+let qrScanStream = null, qrScanTimer = null;
+let pendingQrPhone = new URLSearchParams(location.search).get("nurse") || new URLSearchParams(location.search).get("phone") || "";
 const unsupportedCols = new Set();
 
 function startClock() {
@@ -383,7 +409,7 @@ function startClock() {
     const mm = String(now.getMinutes()).padStart(2, "0");
     const ss = String(now.getSeconds()).padStart(2, "0");
     const elClk = $("#clk"), elDt = $("#dt");
-    if (elClk) elClk.textContent = `${hh}:${mm}:${ss} (24H)`;
+    if (elClk) elClk.textContent = `${hh}:${mm}:${ss}`;
     if (elDt) elDt.textContent = now.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
   };
   tick();
@@ -562,7 +588,7 @@ const store = {
 
 function isEditingAnyInput() {
   const tag = (document.activeElement && document.activeElement.tagName) || "";
-  return editing || addingByManager || tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+  return editing || addingByManager || showQrScanModal || qrNursePhone || detailNursePhone || tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
 async function silentSync() {
@@ -661,7 +687,244 @@ const prl = d => {
   return x.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
 };
 
+function qrPayloadFor(phone) {
+  const base = (location.protocol === "http:" || location.protocol === "https:")
+    ? (location.origin + location.pathname)
+    : "https://nasirbam.github.io/bd-nurses-directory/";
+  const sep = base.includes("?") ? "&" : "?";
+  return `${base}${sep}nurse=${encodeURIComponent(phone)}`;
+}
+
+function extractPhoneFromQr(raw) {
+  const text = (raw || "").trim();
+  if (!text) return "";
+  try {
+    const u = new URL(text);
+    const p = u.searchParams.get("nurse") || u.searchParams.get("phone") || "";
+    if (p) return p.trim();
+    const parts = u.pathname.split("/").filter(Boolean);
+    const last = parts[parts.length - 1] || "";
+    if (/^01[3-9]\d{8}$/.test(last)) return last;
+  } catch (e) {}
+  const m = text.match(/(?:nurse|phone)=([^&\s]+)/i);
+  if (m && m[1]) return decodeURIComponent(m[1]).trim();
+  const bd = text.match(/\b(01[3-9]\d{8})\b/);
+  return bd ? bd[1] : text;
+}
+
+function stopQrScanner() {
+  if (qrScanTimer) { clearInterval(qrScanTimer); qrScanTimer = null; }
+  if (qrScanStream) {
+    try { qrScanStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+    qrScanStream = null;
+  }
+}
+
+function openQrModal(phone) {
+  stopQrScanner(); showQrScanModal = false; detailNursePhone = null; qrNursePhone = phone; renderModal();
+}
+function closeQrModal() { qrNursePhone = null; renderModal(); }
+function openDetailModal(phone) {
+  stopQrScanner(); showQrScanModal = false; qrNursePhone = null; detailNursePhone = phone; renderModal();
+}
+function closeDetailModal() { detailNursePhone = null; renderModal(); }
+function openQrScanner() {
+  qrNursePhone = null; detailNursePhone = null; qrScanMsg = ""; showQrScanModal = true; renderModal();
+}
+function closeQrScanner() {
+  stopQrScanner(); showQrScanModal = false; qrScanMsg = ""; renderModal();
+}
+
+function handleScannedQr(raw) {
+  const phone = extractPhoneFromQr(raw);
+  if (!phone) {
+    qrScanMsg = "QR কোড থেকে কোনো নার্সের নম্বর পাওয়া যায়নি।";
+    const mEl = $("#qrScanErr"); if (mEl) mEl.textContent = qrScanMsg;
+    return;
+  }
+  stopQrScanner();
+  showQrScanModal = false;
+  qrScanMsg = "";
+  if (!me) {
+    pendingQrPhone = phone;
+    draw();
+    return;
+  }
+  const found = all.find(x => x.phone === phone && x.role === "user" && x.status === "approved");
+  if (found) {
+    tab = "dir"; editing = null; addingByManager = false;
+    detailNursePhone = found.phone;
+    draw();
+  } else {
+    note = "এই QR কোডের নার্সটি ডিরেক্টরিতে পাওয়া যায়নি বা এখনো approved হয়নি।";
+    draw();
+  }
+}
+
+function resolvePendingQr() {
+  if (!pendingQrPhone || !me) return;
+  const target = extractPhoneFromQr(pendingQrPhone);
+  pendingQrPhone = "";
+  try {
+    const url = new URL(location.href);
+    if (url.searchParams.has("nurse") || url.searchParams.has("phone")) {
+      url.searchParams.delete("nurse");
+      url.searchParams.delete("phone");
+      history.replaceState({}, "", url.pathname + url.search + url.hash);
+    }
+  } catch (e) {}
+  const found = all.find(x => x.phone === target && x.role === "user" && x.status === "approved");
+  if (found) {
+    tab = "dir"; editing = null; addingByManager = false;
+    detailNursePhone = found.phone;
+  } else if (target) {
+    note = "QR কোডের নার্সটি ডিরেক্টরিতে পাওয়া যায়নি বা এখনো approved হয়নি।";
+  }
+}
+
+function drawQrOnCanvas(payload) {
+  const cvs = $("#qrCanvas");
+  if (!cvs || typeof window.qrcode !== "function") return false;
+  try {
+    const qr = window.qrcode(0, "M");
+    qr.addData(payload);
+    qr.make();
+    const count = qr.getModuleCount();
+    const size = 240, pad = 16;
+    const cell = Math.floor((size - pad * 2) / count);
+    const total = cell * count + pad * 2;
+    cvs.width = total; cvs.height = total;
+    const ctx = cvs.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, total, total);
+    ctx.fillStyle = "#0f3d36";
+    for (let r = 0; r < count; r++) {
+      for (let c = 0; c < count; c++) {
+        if (qr.isDark(r, c)) ctx.fillRect(pad + c * cell, pad + r * cell, cell, cell);
+      }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function downloadNurseQr(phone) {
+  const nurse = all.find(x => x.phone === phone);
+  const srcCvs = $("#qrCanvas");
+  if (!srcCvs) {
+    const img = $("#qrFallbackImg");
+    if (img) window.open(img.src, "_blank");
+    return;
+  }
+  const out = document.createElement("canvas");
+  out.width = 420; out.height = 510;
+  const ctx = out.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, out.width, out.height);
+  ctx.fillStyle = "#0f766e";
+  ctx.font = "bold 20px system-ui,sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("BD Nurses Directory", 210, 38);
+  ctx.drawImage(srcCvs, 70, 56, 280, 280);
+  ctx.fillStyle = "#132a25";
+  ctx.font = "bold 19px system-ui,sans-serif";
+  ctx.fillText((nurse ? nurse.name : phone).slice(0, 30), 210, 372);
+  ctx.fillStyle = "#4e6b64";
+  ctx.font = "15px system-ui,sans-serif";
+  if (nurse) {
+    ctx.fillText((nurse.designation || "").slice(0, 34), 210, 398);
+    ctx.fillText((nurse.workplace || "").slice(0, 38), 210, 422);
+  }
+  ctx.fillStyle = "#0f766e";
+  ctx.font = "bold 16px system-ui,sans-serif";
+  ctx.fillText("Phone: " + phone, 210, 456);
+  const a = document.createElement("a");
+  a.href = out.toDataURL("image/png");
+  a.download = `nurse_qr_${phone}.png`;
+  a.click();
+}
+
+async function copyQrLink(url) {
+  try {
+    await navigator.clipboard.writeText(url);
+    note = "Profile QR লিংক কপি হয়েছে ✅";
+    const el = $("#qrCopyNote"); if (el) el.textContent = "লিংক কপি হয়েছে ✅";
+  } catch (e) {
+    prompt("এই লিংকটি কপি করুন:", url);
+  }
+}
+
+async function startLiveQrCamera() {
+  const v = $("#qrVideo"), errEl = $("#qrScanErr");
+  if (!v) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (errEl) errEl.textContent = "এই ব্রাউজারে সরাসরি ক্যামেরা সমর্থিত নয়। নিচের ছবি থেকে স্ক্যান করুন অথবা নম্বর/লিংক লিখুন।";
+    return;
+  }
+  try {
+    qrScanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    v.srcObject = qrScanStream;
+    await v.play();
+    const detector = ("BarcodeDetector" in window) ? new window.BarcodeDetector({ formats: ["qr_code"] }) : null;
+    const scanCvs = document.createElement("canvas");
+    qrScanTimer = setInterval(async () => {
+      if (!showQrScanModal || !v || v.readyState < 2) return;
+      try {
+        if (detector) {
+          const codes = await detector.detect(v);
+          if (codes && codes.length && codes[0].rawValue) {
+            handleScannedQr(codes[0].rawValue);
+            return;
+          }
+        }
+        if (typeof window.jsQR === "function" && v.videoWidth > 0 && v.videoHeight > 0) {
+          scanCvs.width = v.videoWidth; scanCvs.height = v.videoHeight;
+          const ctx = scanCvs.getContext("2d");
+          ctx.drawImage(v, 0, 0, scanCvs.width, scanCvs.height);
+          const imgData = ctx.getImageData(0, 0, scanCvs.width, scanCvs.height);
+          const res = window.jsQR(imgData.data, imgData.width, imgData.height);
+          if (res && res.data) handleScannedQr(res.data);
+        }
+      } catch (e) {}
+    }, 320);
+  } catch (e) {
+    if (errEl) errEl.textContent = "ক্যামেরা চালু করা যায়নি (" + (e.message || "Permission denied") + ")। নিচের গ্যালারি ছবি আপলোড ব্যবহার করুন।";
+  }
+}
+
+function scanQrFromFile(inp) {
+  const f = inp.files && inp.files[0]; if (!f) return;
+  const errEl = $("#qrScanErr");
+  const r = new FileReader();
+  r.onload = () => {
+    const im = new Image();
+    im.onload = async () => {
+      try {
+        if ("BarcodeDetector" in window) {
+          const det = new window.BarcodeDetector({ formats: ["qr_code"] });
+          const codes = await det.detect(im);
+          if (codes && codes.length && codes[0].rawValue) return handleScannedQr(codes[0].rawValue);
+        }
+        if (typeof window.jsQR === "function") {
+          const c = document.createElement("canvas");
+          c.width = im.width; c.height = im.height;
+          const ctx = c.getContext("2d");
+          ctx.drawImage(im, 0, 0);
+          const imgData = ctx.getImageData(0, 0, c.width, c.height);
+          const res = window.jsQR(imgData.data, imgData.width, imgData.height);
+          if (res && res.data) return handleScannedQr(res.data);
+        }
+        if (errEl) errEl.textContent = "ছবিটিতে কোনো QR কোড পাওয়া যায়নি।";
+      } catch (e) {
+        if (errEl) errEl.textContent = "QR পড়া যায়নি: " + (e.message || e);
+      }
+    };
+    im.src = r.result;
+  };
+  r.readAsDataURL(f);
+}
+
 function renderModal() {
+  stopQrScanner();
   if (me && me.mustChange && showPwPrompt) {
     $("#modalRoot").innerHTML = `
       <div class="modal-backdrop">
@@ -672,6 +935,67 @@ function renderModal() {
           <button class="s" onclick="showPwPrompt=false;draw()">পরে করব (Later)</button>
         </div>
       </div>`;
+  } else if (me && qrNursePhone) {
+    const nurse = all.find(x => x.phone === qrNursePhone);
+    if (!nurse) { qrNursePhone = null; $("#modalRoot").innerHTML = ""; return; }
+    const payload = qrPayloadFor(nurse.phone);
+    const hasLib = typeof window.qrcode === "function";
+    $("#modalRoot").innerHTML = `
+      <div class="modal-backdrop" onclick="if(event.target===this)closeQrModal()">
+        <div class="modal-box" style="text-align:center">
+          <h3 style="margin:0 0 4px">📱 Profile QR Code</h3>
+          <p class="mu" style="margin:0 0 8px"><b>${esc(nurse.name)}</b> · ${esc(nurse.designation)}<br>${esc(nurse.workplace)} · 📞 ${esc(nurse.phone)}</p>
+          <div class="qr-wrap">
+            ${hasLib
+              ? `<canvas id="qrCanvas"></canvas>`
+              : `<img id="qrFallbackImg" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payload)}" alt="QR Code">`}
+          </div>
+          <p class="mu" style="margin:4px 0">যেকোনো ক্যামেরা বা Directory Scanner দিয়ে স্ক্যান করলে সরাসরি এই নার্সের প্রোফাইল ওপেন হবে।</p>
+          <div id="qrCopyNote" class="mu" style="color:var(--pr);font-weight:600"></div>
+          <div class="row" style="margin-top:8px">
+            <button class="s" style="margin:0" onclick="copyQrLink('${esc(payload)}')">🔗 Copy Link</button>
+            <button class="p" style="margin:0" onclick="downloadNurseQr('${esc(nurse.phone)}')">⬇️ Download QR</button>
+          </div>
+          <button class="s" onclick="closeQrModal()">বন্ধ করুন (Close)</button>
+        </div>
+      </div>`;
+    if (hasLib) drawQrOnCanvas(payload);
+  } else if (me && detailNursePhone) {
+    const nurse = all.find(x => x.phone === detailNursePhone);
+    if (!nurse) { detailNursePhone = null; $("#modalRoot").innerHTML = ""; return; }
+    const canEdit = canManage(me, nurse);
+    $("#modalRoot").innerHTML = `
+      <div class="modal-backdrop" onclick="if(event.target===this)closeDetailModal()">
+        <div class="modal-box">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h3 style="margin:0">🩺 Nurse Profile Details</h3>
+            <button class="s" style="width:auto;margin:0;padding:4px 10px" onclick="closeDetailModal()">✕</button>
+          </div>
+          ${profView(nurse, `<div class="act"><button style="background:#0f766e" onclick="openQrModal('${esc(nurse.phone)}')">📱 QR Code</button>${canEdit ? `<button style="background:#1e40af" onclick="closeDetailModal();editing='${esc(nurse.phone)}';msg='';draw()">✏️ Edit</button>` : ""}</div>`)}
+          <button class="s" onclick="closeDetailModal()">Close</button>
+        </div>
+      </div>`;
+  } else if (me && showQrScanModal) {
+    $("#modalRoot").innerHTML = `
+      <div class="modal-backdrop" onclick="if(event.target===this)closeQrScanner()">
+        <div class="modal-box">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h3 style="margin:0">📷 QR Code Scan করুন</h3>
+            <button class="s" style="width:auto;margin:0;padding:4px 10px" onclick="closeQrScanner()">✕</button>
+          </div>
+          <video id="qrVideo" class="scan-video" playsinline muted></video>
+          <p class="mu" style="margin:8px 0 4px">নার্সের QR কোডটি ক্যামেরার সামনে ধরুন অথবা QR ছবি আপলোড করুন:</p>
+          <input type="file" id="qrFileInp" accept="image/*" style="display:none" onchange="scanQrFromFile(this)">
+          <button class="s" onclick="$('#qrFileInp').click()">🖼️ গ্যালারি থেকে QR ছবি বেছে নিন</button>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <input id="qrManualInp" placeholder="অথবা QR লিংক / Phone নম্বর লিখুন">
+            <button class="p" style="width:auto;margin:0;padding:8px 14px" onclick="handleScannedQr($('#qrManualInp').value)">Open</button>
+          </div>
+          <div id="qrScanErr" class="msg">${esc(qrScanMsg)}</div>
+          <button class="s" onclick="closeQrScanner()">বন্ধ করুন</button>
+        </div>
+      </div>`;
+    setTimeout(startLiveQrCamera, 40);
   } else {
     $("#modalRoot").innerHTML = "";
   }
@@ -681,7 +1005,7 @@ function draw() {
   updateTickerUI();
   updateLiveBadge();
   $("#hd").innerHTML = me
-    ? `<button onclick="manualRefresh()" title="Sync">🔄</button> <span style="color:#fff">${esc(me.name)}</span> <button onclick="out()">Logout</button>`
+    ? `<button onclick="openQrScanner()" title="Scan QR">📷 QR</button> <button onclick="manualRefresh()" title="Sync">🔄</button> <span style="color:#fff">${esc(me.name)}</span> <button onclick="out()">Logout</button>`
     : (view === "admin" ? `<button onclick="manualRefresh()" title="Sync">🔄</button>` : `<button onclick="manualRefresh()" title="Sync">🔄</button> <button onclick="view='admin';msg='';draw()">🔐 Admin</button>`);
 
   if (!me) {
@@ -743,7 +1067,8 @@ function submittedView() {
 }
 
 function loginForm() {
-  return `<div class="card"><h3>Login</h3>
+  return (pendingQrPhone ? `<div class="note">🔍 QR স্ক্যান সম্পন্ন (${esc(extractPhoneFromQr(pendingQrPhone))}) — বিস্তারিত তথ্য দেখতে Login করুন।</div>` : "") +
+  `<div class="card"><h3>Login</h3>
   <label>Phone number (User ID)</label><input id="lp" inputmode="tel" placeholder="01XXXXXXXXX">
   <label>Password</label><input id="lw" type="password" onkeydown="event.key==='Enter'&&login()">
   <button class="p" onclick="login()">Login</button>
@@ -866,7 +1191,7 @@ async function adminLogin() {
     await store.set("admin", u);
   }
   if (!u || u.pw !== await H(pw)) { msg = "Admin/Editor ID বা Password ভুল"; return draw(); }
-  msg = ""; me = u; tab = "pend"; showPwPrompt = !!u.mustChange; draw();
+  msg = ""; me = u; tab = "pend"; showPwPrompt = !!u.mustChange; resolvePendingQr(); draw();
 }
 
 async function login() {
@@ -876,11 +1201,13 @@ async function login() {
   if (!u || u.pw !== w) { msg = "Phone বা Password ভুল"; return draw(); }
   if (u.status === "pending") { msg = "আপনার আবেদন এখনো Admin approval এর অপেক্ষায়"; return draw(); }
   if (u.status === "rejected") { msg = "আপনার আবেদন বাতিল করা হয়েছে"; return draw(); }
-  msg = ""; me = u; tab = "dir"; showPwPrompt = !!u.mustChange; draw();
+  msg = ""; me = u; tab = "dir"; showPwPrompt = !!u.mustChange; resolvePendingQr(); draw();
 }
 
 function out() {
-  showPwPrompt = false; me = null; editing = null; addingByManager = false; formPhoto = null; view = "login"; msg = ""; draw();
+  stopQrScanner();
+  showPwPrompt = false; qrNursePhone = null; detailNursePhone = null; showQrScanModal = false;
+  me = null; editing = null; addingByManager = false; formPhoto = null; view = "login"; msg = ""; draw();
 }
 
 const opt = (a, ph) => `<option value="">${ph}</option>` + a.map(x => `<option>${esc(x)}</option>`).join("");
@@ -1081,7 +1408,7 @@ function dirView() {
   <div class="row" style="margin-top:8px"><select id="fc" onchange="filt()">${opt(Object.keys(CAT), "All categories")}</select><select id="fs" onchange="filt()">${opt([...new Set(Object.values(CAT).flat())], "All designations")}</select></div>
   <div class="row" style="margin-top:8px"><select id="fd" onchange="fdv()">${opt(Object.keys(DIV), "All divisions")}</select><select id="fi" onchange="fdi();filt()">${opt(ALLD, "All districts")}</select></div>
   <div class="row" style="margin-top:8px"><div id="fuw"><input id="fu" placeholder="Upazila/Thana" oninput="filt()"></div><input id="fh" placeholder="Hospital / Institute name" oninput="filt()"></div>
-  <button class="s" onclick="rf()">Filter clear</button></div>
+  <div class="row" style="margin-top:4px"><button class="s" onclick="rf()">Filter clear</button><button class="p" style="margin-top:8px" onclick="openQrScanner()">📷 Scan QR</button></div></div>
   ${isMgr(me) ? `<details class="card" open><summary><b>🖨️ Print Options (Admin)</b></summary><p class="mu">যে তথ্যগুলো print করতে চান সেগুলোতে tick দিন:</p>
   <div class="row">${PF.map(([k, l]) => `<label style="display:flex;gap:6px;align-items:center;margin:3px 0;color:var(--tx);font-size:14px"><input type="checkbox" style="width:auto" ${pcols.includes(k) ? "checked" : ""} onchange="pc('${k}',this.checked)">${l}</label>`).join("")}</div>
   <div class="row"><button class="s" onclick="pall(1)">Select all</button><button class="s" onclick="pall(0)">Clear all</button></div>
@@ -1107,7 +1434,7 @@ function filt() {
   const r = res(), pn = $("#pn"); if (pn) pn.textContent = r.length;
   $("#list").innerHTML = `<p class="mu">${r.length} জন পাওয়া গেছে</p>` + r.map(x => {
     const canEdit = canManage(me, x);
-    return profView(x, canEdit ? `<button class="s" onclick="editing='${esc(x.phone)}';msg='';draw()">✏️ তথ্য Edit করুন</button>` : "");
+    return profView(x, `<div class="act"><button style="background:#0f766e" onclick="openQrModal('${esc(x.phone)}')">📱 QR Code</button><button style="background:#334155" onclick="openDetailModal('${esc(x.phone)}')">👁️ Details</button>${canEdit ? `<button style="background:#1e40af" onclick="editing='${esc(x.phone)}';msg='';draw()">✏️ Edit</button>` : ""}</div>`);
   }).join("");
 }
 function doPrint() {
@@ -1128,7 +1455,7 @@ function profView(x, extra = "") {
 
 function meView() {
   return (me.pendingEdit ? `<div class="note">⏳ আপনার তথ্য পরিবর্তনের অনুরোধ Admin approval এর অপেক্ষায় আছে</div>` : "") +
-    profView(me, `<input type="file" id="pf" accept="image/*" style="display:none" onchange="setPhoto(this)"><button class="s" onclick="$('#pf').click()">📷 ${me.photo ? "Profile picture পরিবর্তন করুন" : "Profile picture যোগ করুন (ঐচ্ছিক)"}</button>${me.photo ? `<button class="s" onclick="rmPhoto()">Picture মুছুন</button>` : ""}<button class="p" onclick="editing='${esc(me.phone)}';msg='';draw()">✏️ তথ্য Edit / বদলি Request</button>`);
+    profView(me, `<input type="file" id="pf" accept="image/*" style="display:none" onchange="setPhoto(this)"><button class="s" onclick="$('#pf').click()">📷 ${me.photo ? "Profile picture পরিবর্তন করুন" : "Profile picture যোগ করুন (ঐচ্ছিক)"}</button>${me.photo ? `<button class="s" onclick="rmPhoto()">Picture মুছুন</button>` : ""}<button class="s" onclick="openQrModal('${esc(me.phone)}')">📱 My Directory QR Code</button><button class="p" onclick="editing='${esc(me.phone)}';msg='';draw()">✏️ তথ্য Edit / বদলি Request</button>`);
 }
 function setPhoto(inp) {
   const f = inp.files[0]; if (!f) return;

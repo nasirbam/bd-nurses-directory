@@ -1,10 +1,12 @@
 package com.example
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -33,6 +35,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.PendingActions
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -74,6 +77,9 @@ import com.example.ui.DirectoryViewModel
 import com.example.ui.MainTab
 import com.example.ui.components.FirstLoginPasswordPromptDialog
 import com.example.ui.components.LiveClockAndNewsTickerBar
+import com.example.ui.components.NurseDetailDialog
+import com.example.ui.components.NurseQrCodeDialog
+import com.example.ui.components.QrScannerDialog
 import com.example.ui.components.StatusBanner
 import com.example.ui.screens.AllUsersTab
 import com.example.ui.screens.AuthFlowContent
@@ -85,14 +91,28 @@ import com.example.ui.screens.RequestsTab
 import com.example.ui.theme.BdNursesDirectoryTheme
 
 class MainActivity : ComponentActivity() {
+  private val directoryViewModel: DirectoryViewModel by viewModels()
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+    handleDeepLinkIntent(intent)
     setContent {
       BdNursesDirectoryTheme {
-        BdNursesDirectoryApp()
+        BdNursesDirectoryApp(viewModel = directoryViewModel)
       }
     }
+  }
+
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+    handleDeepLinkIntent(intent)
+  }
+
+  private fun handleDeepLinkIntent(intent: Intent?) {
+    val dataUri = intent?.data?.toString() ?: return
+    directoryViewModel.handleScannedOrDeepLinkQr(dataUri)
   }
 }
 
@@ -147,6 +167,36 @@ fun BdNursesDirectoryApp(viewModel: DirectoryViewModel = viewModel()) {
     )
   }
 
+  state.qrTargetNurse?.let { qrNurse ->
+    NurseQrCodeDialog(
+      nurse = qrNurse,
+      onDismiss = viewModel::dismissQrCodeDialog,
+    )
+  }
+
+  state.detailTargetNurse?.let { detailNurse ->
+    NurseDetailDialog(
+      nurse = detailNurse,
+      canEdit = me?.canManageNurse(detailNurse) == true,
+      onEdit = {
+        viewModel.dismissNurseDetailDialog()
+        viewModel.startEditing(detailNurse.phone)
+      },
+      onShowQr = {
+        viewModel.dismissNurseDetailDialog()
+        viewModel.openQrCodeDialog(detailNurse.phone)
+      },
+      onDismiss = viewModel::dismissNurseDetailDialog,
+    )
+  }
+
+  if (state.showQrScanner) {
+    QrScannerDialog(
+      onQrScanned = viewModel::handleScannedOrDeepLinkQr,
+      onDismiss = viewModel::dismissQrScanner,
+    )
+  }
+
   BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
     val useRail = maxWidth >= 600.dp && navItems.isNotEmpty()
 
@@ -179,6 +229,17 @@ fun BdNursesDirectoryApp(viewModel: DirectoryViewModel = viewModel()) {
               }
             },
             actions = {
+              if (me != null) {
+                IconButton(
+                  onClick = { viewModel.openQrScanner() },
+                  modifier = Modifier.testTag("header_scan_qr_button"),
+                ) {
+                  Icon(
+                    imageVector = Icons.Filled.QrCodeScanner,
+                    contentDescription = "Scan Nurse QR Code",
+                  )
+                }
+              }
               IconButton(
                 onClick = { viewModel.refreshData() },
                 modifier = Modifier.testTag("sync_button"),
@@ -440,6 +501,9 @@ private fun AuthenticatedContent(
             onSetAllPrintCols = viewModel::setAllPrintColumns,
             onPrintError = viewModel::setPrintError,
             onEditUser = viewModel::startEditing,
+            onShowQr = viewModel::openQrCodeDialog,
+            onOpenDetail = viewModel::openNurseDetailDialog,
+            onOpenScanner = viewModel::openQrScanner,
             modifier = Modifier.fillMaxSize(),
           )
 
@@ -485,6 +549,7 @@ private fun AuthenticatedContent(
             onPhotoError = viewModel::setPhotoReadError,
             onRemovePhoto = { viewModel.updateProfilePhoto(null) },
             onStartEdit = { viewModel.startEditing(me.phone) },
+            onShowQr = { viewModel.openQrCodeDialog(me.phone) },
             modifier = Modifier.fillMaxSize(),
           )
 

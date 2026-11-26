@@ -11,6 +11,7 @@ import com.example.data.PendingEdit
 import com.example.data.ResetRequest
 import com.example.data.extractEmailJsConfig
 import com.example.data.toFormDraft
+import com.example.util.QrCodeHelper
 import java.security.SecureRandom
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -76,6 +77,10 @@ data class DirectoryUiState(
   val isAddingNurseByManager: Boolean = false,
   val formDraft: NurseFormDraft = NurseFormDraft(),
   val showPasswordPromptDialog: Boolean = false,
+  val qrTargetPhone: String? = null,
+  val detailTargetPhone: String? = null,
+  val pendingQrTargetPhone: String? = null,
+  val showQrScanner: Boolean = false,
   val recoveryStepCodeSent: Boolean = false,
   val recoveryTargetPhone: String = "",
   val recoveryTargetEmailMasked: String = "",
@@ -86,6 +91,11 @@ data class DirectoryUiState(
   val bannerNote: String = "",
   val printError: String = "",
 ) {
+  val qrTargetNurse: NurseRecord?
+    get() = qrTargetPhone?.let { p -> records.find { it.phone == p } }
+
+  val detailTargetNurse: NurseRecord?
+    get() = detailTargetPhone?.let { p -> records.find { it.phone == p } }
   val storedEmailJsConfig: EmailJsConfig?
     get() = records.extractEmailJsConfig()
 
@@ -218,12 +228,20 @@ class DirectoryViewModel(private val repository: NurseRepository = NurseReposito
             _uiState.update { state ->
               val updatedCurrent =
                 state.currentUser?.let { cur -> list.find { it.phone == cur.phone } }
+              val pendingPhone = state.pendingQrTargetPhone
+              val resolvedPending =
+                if (updatedCurrent != null && pendingPhone != null) {
+                  list.find { it.phone == pendingPhone && it.role == "user" && it.status == "approved" }
+                } else null
               state.copy(
                 isSupabaseConfigured = true,
                 isEmailRecoveryConfigured = emailReady,
                 isLoading = false,
                 records = list,
                 currentUser = updatedCurrent,
+                activeTab = if (resolvedPending != null) MainTab.DIRECTORY else state.activeTab,
+                detailTargetPhone = resolvedPending?.phone ?: state.detailTargetPhone,
+                pendingQrTargetPhone = if (resolvedPending != null) null else pendingPhone,
               )
             }
           }
@@ -277,6 +295,84 @@ class DirectoryViewModel(private val repository: NurseRepository = NurseReposito
     _uiState.update { it.copy(showPasswordPromptDialog = false) }
   }
 
+  fun openQrCodeDialog(phone: String) {
+    _uiState.update { it.copy(qrTargetPhone = phone) }
+  }
+
+  fun dismissQrCodeDialog() {
+    _uiState.update { it.copy(qrTargetPhone = null) }
+  }
+
+  fun openNurseDetailDialog(phone: String) {
+    _uiState.update { it.copy(detailTargetPhone = phone) }
+  }
+
+  fun dismissNurseDetailDialog() {
+    _uiState.update { it.copy(detailTargetPhone = null) }
+  }
+
+  fun openQrScanner() {
+    _uiState.update { it.copy(showQrScanner = true, errorMessage = "") }
+  }
+
+  fun dismissQrScanner() {
+    _uiState.update { it.copy(showQrScanner = false) }
+  }
+
+  fun handleScannedOrDeepLinkQr(raw: String) {
+    val phone = QrCodeHelper.extractNursePhone(raw)
+    if (phone.isNullOrBlank()) {
+      _uiState.update {
+        it.copy(
+          showQrScanner = false,
+          errorMessage = "বৈধ নার্স QR কোড শনাক্ত করা যায়নি।",
+        )
+      }
+      return
+    }
+    val state = _uiState.value
+    if (state.currentUser == null) {
+      _uiState.update {
+        it.copy(
+          showQrScanner = false,
+          pendingQrTargetPhone = phone,
+          successMessage = "📱 QR কোড পাওয়া গেছে ($phone)। বিস্তারিত দেখতে Login করুন।",
+          errorMessage = "",
+        )
+      }
+      return
+    }
+    if (state.isLoading && state.records.isEmpty()) {
+      _uiState.update {
+        it.copy(showQrScanner = false, pendingQrTargetPhone = phone, errorMessage = "")
+      }
+      return
+    }
+    val target =
+      state.records.find { it.phone == phone && it.role == "user" && it.status == "approved" }
+    if (target != null) {
+      _uiState.update {
+        it.copy(
+          showQrScanner = false,
+          activeTab = MainTab.DIRECTORY,
+          editingPhone = null,
+          isAddingNurseByManager = false,
+          detailTargetPhone = target.phone,
+          pendingQrTargetPhone = null,
+          errorMessage = "",
+        )
+      }
+    } else {
+      _uiState.update {
+        it.copy(
+          showQrScanner = false,
+          pendingQrTargetPhone = null,
+          errorMessage = "এই QR কোডের ($phone) কোনো অনুমোদিত নার্স ডিরেক্টরিতে পাওয়া যায়নি।",
+        )
+      }
+    }
+  }
+
   fun openPasswordTabFromPrompt() {
     _uiState.update {
       it.copy(
@@ -312,14 +408,26 @@ class DirectoryViewModel(private val repository: NurseRepository = NurseReposito
       if (err != null) {
         _uiState.update { it.copy(isBusy = false, records = latestRecords, errorMessage = err) }
       } else {
-        _uiState.update {
-          it.copy(
+        _uiState.update { state ->
+          val pendingPhone = state.pendingQrTargetPhone
+          val resolved =
+            pendingPhone?.let { target ->
+              latestRecords.find {
+                it.phone == target && it.role == "user" && it.status == "approved"
+              }
+            }
+          state.copy(
             isBusy = false,
             records = latestRecords,
             currentUser = user,
             activeTab = MainTab.DIRECTORY,
             showPasswordPromptDialog = user?.mustChange == true,
-            errorMessage = "",
+            detailTargetPhone = resolved?.phone,
+            pendingQrTargetPhone = null,
+            errorMessage =
+              if (pendingPhone != null && resolved == null)
+                "QR কোডের ($pendingPhone) কোনো অনুমোদিত নার্স পাওয়া যায়নি।"
+              else "",
             bannerNote = "",
           )
         }
@@ -349,14 +457,26 @@ class DirectoryViewModel(private val repository: NurseRepository = NurseReposito
           )
         }
       } else {
-        _uiState.update {
-          it.copy(
+        _uiState.update { state ->
+          val pendingPhone = state.pendingQrTargetPhone
+          val resolved =
+            pendingPhone?.let { target ->
+              latestRecords.find {
+                it.phone == target && it.role == "user" && it.status == "approved"
+              }
+            }
+          state.copy(
             isBusy = false,
             records = latestRecords,
             currentUser = manager,
-            activeTab = MainTab.REQUESTS,
+            activeTab = if (resolved != null) MainTab.DIRECTORY else MainTab.REQUESTS,
             showPasswordPromptDialog = manager.mustChange,
-            errorMessage = "",
+            detailTargetPhone = resolved?.phone,
+            pendingQrTargetPhone = null,
+            errorMessage =
+              if (pendingPhone != null && resolved == null)
+                "QR কোডের ($pendingPhone) কোনো অনুমোদিত নার্স পাওয়া যায়নি।"
+              else "",
             bannerNote = "",
           )
         }
@@ -581,6 +701,9 @@ class DirectoryViewModel(private val repository: NurseRepository = NurseReposito
         editingPhone = null,
         isAddingNurseByManager = false,
         showPasswordPromptDialog = false,
+        qrTargetPhone = null,
+        detailTargetPhone = null,
+        showQrScanner = false,
         authView = AuthView.LOGIN,
         errorMessage = "",
         successMessage = "",

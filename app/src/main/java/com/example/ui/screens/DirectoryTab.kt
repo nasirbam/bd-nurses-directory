@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.PeopleOutline
 import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.QrCode2
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -60,6 +62,9 @@ fun DirectoryTab(
   onSetAllPrintCols: (Boolean) -> Unit,
   onPrintError: (String) -> Unit,
   onEditUser: (String) -> Unit = {},
+  onShowQr: (String) -> Unit = {},
+  onOpenDetail: (String) -> Unit = {},
+  onOpenScanner: () -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   val context = LocalContext.current
@@ -184,11 +189,25 @@ fun DirectoryTab(
             )
           }
 
-          OutlinedButton(
-            onClick = onClearFilter,
-            modifier = Modifier.fillMaxWidth().height(48.dp).testTag("filter_clear_button"),
-          ) {
-            Text("Filter clear")
+          Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(
+              onClick = onClearFilter,
+              modifier = Modifier.weight(1f).height(48.dp).testTag("filter_clear_button"),
+            ) {
+              Text("Filter clear")
+            }
+            Button(
+              onClick = onOpenScanner,
+              modifier = Modifier.weight(1f).height(48.dp).testTag("scan_qr_button"),
+            ) {
+              Icon(
+                imageVector = Icons.Filled.QrCodeScanner,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+              )
+              Spacer(modifier = Modifier.size(6.dp))
+              Text("Scan QR")
+            }
           }
         }
       }
@@ -356,20 +375,46 @@ fun DirectoryTab(
         val canEditHere = currentManager?.canManageNurse(nurse) == true
         NurseProfileCard(
           nurse = nurse,
-          footerContent =
-            if (canEditHere) {
-              {
+          footerContent = {
+            Row(
+              horizontalArrangement = Arrangement.spacedBy(8.dp),
+              modifier = Modifier.fillMaxWidth(),
+            ) {
+              OutlinedButton(
+                onClick = { onShowQr(nurse.phone) },
+                modifier = Modifier.weight(1f).height(48.dp).testTag("dir_qr_${nurse.phone}"),
+              ) {
+                Icon(
+                  imageVector = Icons.Filled.QrCode2,
+                  contentDescription = null,
+                  modifier = Modifier.size(18.dp),
+                )
+                Spacer(modifier = Modifier.size(6.dp))
+                Text("QR Code")
+              }
+              OutlinedButton(
+                onClick = { onOpenDetail(nurse.phone) },
+                modifier = Modifier.weight(1f).height(48.dp).testTag("dir_detail_${nurse.phone}"),
+              ) {
+                Text("Details")
+              }
+              if (canEditHere) {
                 OutlinedButton(
                   onClick = { onEditUser(nurse.phone) },
                   modifier =
-                    Modifier.fillMaxWidth().height(48.dp).testTag("dir_edit_${nurse.phone}"),
+                    Modifier.weight(1f).height(48.dp).testTag("dir_edit_${nurse.phone}"),
                 ) {
-                  Icon(Icons.Filled.Edit, contentDescription = null)
-                  Spacer(modifier = Modifier.size(8.dp))
-                  Text("তথ্য Edit করুন")
+                  Icon(
+                    imageVector = Icons.Filled.Edit,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                  )
+                  Spacer(modifier = Modifier.size(4.dp))
+                  Text("Edit")
                 }
               }
-            } else null,
+            }
+          },
         )
       }
     }

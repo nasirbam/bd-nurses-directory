@@ -92,6 +92,10 @@ fun AuthFlowContent(
       )
     }
 
+    if (state.authView == AuthView.LOGIN && state.successMessage.isNotBlank()) {
+      StatusBanner(text = state.successMessage)
+    }
+
     when (state.authView) {
       AuthView.LOGIN ->
         LoginCard(

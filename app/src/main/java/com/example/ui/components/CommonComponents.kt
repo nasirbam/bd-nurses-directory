@@ -124,7 +124,7 @@ fun LiveClockAndNewsTickerBar(
           )
           Spacer(modifier = Modifier.width(6.dp))
           Text(
-            text = "$timeText (24H)",
+            text = timeText,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSecondaryContainer,

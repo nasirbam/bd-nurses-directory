@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -56,6 +57,7 @@ fun MyProfileTab(
   onPhotoError: () -> Unit,
   onRemovePhoto: () -> Unit,
   onStartEdit: () -> Unit,
+  onShowQr: () -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   val context = LocalContext.current
@@ -109,6 +111,16 @@ fun MyProfileTab(
             ) {
               Text("Picture মুছুন")
             }
+          }
+
+          OutlinedButton(
+            onClick = onShowQr,
+            enabled = !isBusy,
+            modifier = Modifier.fillMaxWidth().height(48.dp).testTag("my_profile_qr_button"),
+          ) {
+            Icon(Icons.Filled.QrCode2, contentDescription = null)
+            Spacer(modifier = Modifier.size(8.dp))
+            Text("My Directory QR Code")
           }
 
           Button(
