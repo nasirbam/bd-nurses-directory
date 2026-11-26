@@ -4,16 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>BD Nurses Directory</title>
-<link href="https://sonnetdp.github.io/nikosh/css/nikosh.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <style>
-@font-face{
-  font-family:'NikoshBAN';
-  src:local('NikoshBAN'),local('Nikosh'),url('https://cdn.jsdelivr.net/gh/hmoazzem/bangla-fonts/NikoshBAN.ttf') format('truetype');
-  font-display:swap;
-}
 :root{
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
@@ -44,7 +38,7 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{
   margin:0;
   color:var(--tx);
-  font:15px/1.5 'NikoshBAN','Nikosh','Noto Serif Bengali',system-ui,sans-serif;
+  font:15px/1.5 'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   min-height:100vh;
   background-color:var(--bg);
   background-image:
@@ -290,6 +284,8 @@ button.s{
   font-size:12px;
   cursor:pointer;
 }
+.date-wrap{display:flex;gap:6px;align-items:center}
+.date-wrap input[type="date"]{width:44px;flex:none;padding:8px 6px;cursor:pointer}
 #pa{display:none}
 #pv table{border-collapse:collapse;width:100%;font-size:12px}
 #pv th,#pv td{border:1px solid var(--bd);padding:4px 6px;text-align:left;white-space:nowrap}
@@ -298,7 +294,7 @@ button.s{
   header,.topbar-meta,main,.modal-backdrop{display:none!important}
   :root{padding:0}
   body{background:#fff!important}
-  #pa{display:block;color:#000;background:#fff;font-family:'NikoshBAN','Nikosh','Noto Serif Bengali',system-ui,sans-serif}
+  #pa{display:block;color:#000;background:#fff;font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
   #pa table{border-collapse:collapse;width:100%;font-size:12px}
   #pa th,#pa td{border:1px solid #444;padding:4px 6px;text-align:left}
   #pa th{background:#e5e5e5}
@@ -429,7 +425,7 @@ const H = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", ne
 
 let all = [], me = null, tab = "dir", msg = "", view = "login", editing = null, addingByManager = false, note = "";
 let formPhoto = null, showPwPrompt = false, recSent = false, recPhone = "", recMaskedEmail = "";
-let eduEntries = [{ cat: "", sub: "", customSub: "", info: "" }];
+let eduEntries = [{ cat: "", sub: "", customSub: "", institute: "", passingYear: "", major: "" }];
 let editingMgrId = null, rtConnected = false, ws = null, hbTimer = null, syncInFlight = false;
 let qrNursePhone = null, detailNursePhone = null, showQrScanModal = false, qrScanMsg = "";
 let qrScanStream = null, qrScanTimer = null;
@@ -442,9 +438,13 @@ function startClock() {
     const hh = String(now.getHours()).padStart(2, "0");
     const mm = String(now.getMinutes()).padStart(2, "0");
     const ss = String(now.getSeconds()).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mo = String(now.getMonth() + 1).padStart(2, "0");
+    const yyyy = now.getFullYear();
+    const wk = now.toLocaleDateString("en-US", { weekday: "short" });
     const elClk = $("#clk"), elDt = $("#dt");
     if (elClk) elClk.textContent = `${hh}:${mm}:${ss}`;
-    if (elDt) elDt.textContent = now.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
+    if (elDt) elDt.textContent = `${dd}/${mo}/${yyyy}, ${wk}`;
   };
   tick();
   setInterval(tick, 1000);
@@ -713,12 +713,70 @@ async function ensureAdmin() {
   });
 }
 
+function parseAnyDate(s) {
+  const v = String(s || "").trim();
+  if (!v) return null;
+  let y, m, d;
+  let mt = v.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if (mt) {
+    d = parseInt(mt[1], 10); m = parseInt(mt[2], 10); y = parseInt(mt[3], 10);
+  } else {
+    mt = v.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if (mt) {
+      y = parseInt(mt[1], 10); m = parseInt(mt[2], 10); d = parseInt(mt[3], 10);
+    } else {
+      const dt = new Date(v);
+      return isNaN(dt.getTime()) ? null : dt;
+    }
+  }
+  if (m < 1 || m > 12 || d < 1 || d > 31 || y < 1900 || y > 2100) return null;
+  const dt = new Date(y, m - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return null;
+  return dt;
+}
+function fmtDate(s) {
+  const dt = parseAnyDate(s);
+  if (!dt) return String(s || "").trim();
+  return `${String(dt.getDate()).padStart(2, "0")}/${String(dt.getMonth() + 1).padStart(2, "0")}/${dt.getFullYear()}`;
+}
+function toIsoDate(s) {
+  const dt = parseAnyDate(s);
+  if (!dt) return "";
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+}
+function autoSlashDate(inp) {
+  const digits = inp.value.replace(/\D/g, "").slice(0, 8);
+  let out = digits;
+  if (digits.length > 4) out = digits.slice(0, 2) + "/" + digits.slice(2, 4) + "/" + digits.slice(4);
+  else if (digits.length > 2) out = digits.slice(0, 2) + "/" + digits.slice(2);
+  inp.value = out;
+}
+function parseAddressParts(raw) {
+  const lines = String(raw || "").split("\n");
+  const presentLines = [];
+  let homeDistrict = "", homeAddress = "";
+  for (const line of lines) {
+    const t = line.trim();
+    if (t.startsWith("🏠 Home District:")) homeDistrict = t.slice("🏠 Home District:".length).trim();
+    else if (t.startsWith("🏠 Home Address:")) homeAddress = t.slice("🏠 Home Address:".length).trim();
+    else if (t.startsWith("Home District:")) homeDistrict = t.slice("Home District:".length).trim();
+    else if (t.startsWith("Home Address:")) homeAddress = t.slice("Home Address:".length).trim();
+    else if (t) presentLines.push(line.trimEnd());
+  }
+  return { present: presentLines.join("\n").trim(), homeDistrict, homeAddress };
+}
+function buildEncodedAddress(present, homeDistrict, homeAddress) {
+  const p = [];
+  if ((present || "").trim()) p.push(present.trim());
+  if ((homeDistrict || "").trim()) p.push("🏠 Home District: " + homeDistrict.trim());
+  if ((homeAddress || "").trim()) p.push("🏠 Home Address: " + homeAddress.trim());
+  return p.join("\n");
+}
 const prl = d => {
-  if (!d) return "";
-  const x = new Date(d);
-  if (isNaN(x.getTime())) return "";
+  const x = parseAnyDate(d);
+  if (!x) return "";
   x.setFullYear(x.getFullYear() + 59);
-  return x.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+  return `${String(x.getDate()).padStart(2, "0")}/${String(x.getMonth() + 1).padStart(2, "0")}/${x.getFullYear()}`;
 };
 
 function qrPayloadFor(phone) {
@@ -855,21 +913,21 @@ function downloadNurseQr(phone) {
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, out.width, out.height);
   ctx.fillStyle = "#0f766e";
-  ctx.font = "bold 20px system-ui,sans-serif";
+  ctx.font = "bold 20px 'Plus Jakarta Sans',system-ui,sans-serif";
   ctx.textAlign = "center";
   ctx.fillText("BD Nurses Directory", 210, 38);
   ctx.drawImage(srcCvs, 70, 56, 280, 280);
   ctx.fillStyle = "#132a25";
-  ctx.font = "bold 19px system-ui,sans-serif";
+  ctx.font = "bold 19px 'Plus Jakarta Sans',system-ui,sans-serif";
   ctx.fillText((nurse ? nurse.name : phone).slice(0, 30), 210, 372);
   ctx.fillStyle = "#4e6b64";
-  ctx.font = "15px system-ui,sans-serif";
+  ctx.font = "15px 'Plus Jakarta Sans',system-ui,sans-serif";
   if (nurse) {
     ctx.fillText((nurse.designation || "").slice(0, 34), 210, 398);
     ctx.fillText((nurse.workplace || "").slice(0, 38), 210, 422);
   }
   ctx.fillStyle = "#0f766e";
-  ctx.font = "bold 16px system-ui,sans-serif";
+  ctx.font = "bold 16px 'Plus Jakarta Sans',system-ui,sans-serif";
   ctx.fillText("Phone: " + phone, 210, 456);
   const a = document.createElement("a");
   a.href = out.toDataURL("image/png");
@@ -1262,8 +1320,17 @@ function regForm(ed, byMgr = false) {
   <label>Name *</label><input id="r_name">
   <label>Father's Name *</label><input id="r_fa">
   <label>Mother's Name *</label><input id="r_mo">
-  <label>Date of Birth *</label><input id="r_dob" type="date" onchange="$('#r_prl').textContent=prl(this.value)?'PRL Date: '+prl(this.value):''"><div id="r_prl" class="mu"></div>
-  <label>Joining Date (চাকরিতে/বর্তমান কর্মস্থলে যোগদানের তারিখ) *</label><input id="r_jd" type="date">
+  <label>Date of Birth (dd/mm/yyyy) *</label>
+  <div class="date-wrap">
+    <input id="r_dob" placeholder="DD/MM/YYYY" maxlength="10" inputmode="numeric" oninput="autoSlashDate(this);onDobChanged()" onchange="onDobChanged()">
+    <input id="r_dob_pk" type="date" title="Pick Date" onchange="if(this.value){$('#r_dob').value=fmtDate(this.value);onDobChanged()}">
+  </div>
+  <div id="r_prl" class="mu"></div>
+  <label>Joining Date (dd/mm/yyyy — চাকরিতে/বর্তমান কর্মস্থলে যোগদানের তারিখ) *</label>
+  <div class="date-wrap">
+    <input id="r_jd" placeholder="DD/MM/YYYY" maxlength="10" inputmode="numeric" oninput="autoSlashDate(this);const p=$('#r_jd_pk');if(p)p.value=toIsoDate(this.value)">
+    <input id="r_jd_pk" type="date" title="Pick Date" onchange="if(this.value){$('#r_jd').value=fmtDate(this.value)}">
+  </div>
   <label>Phone number (User ID) *</label><input id="r_ph" inputmode="tel" placeholder="01XXXXXXXXX" ${ed ? "readonly" : ""}>
   <label>BNMC Reg no. *</label><input id="r_bn">
   <label>Designation *</label><select id="r_des"><option value="">Select category first</option></select>
@@ -1274,7 +1341,9 @@ function regForm(ed, byMgr = false) {
   </div>
   <label>Upazila/Thana *</label><div id="r_upw"><select id="r_up" onchange="onUpaChange()"><option value="">Select district first</option></select></div>
   <div id="r_up_custom_wrap" style="display:none"><label>Custom Upazila/Thana নাম লিখুন *</label><input id="r_up_custom" placeholder="Upazila/Thana লিখুন"></div>
-  <label>Address</label><textarea id="r_ad" rows="2"></textarea>
+  <label>Present Address (বর্তমান ঠিকানা)</label><textarea id="r_ad" rows="2"></textarea>
+  <label>Home District (নিজ জেলা)</label><select id="r_hd">${opt(ALLD, "Select Home District (ঐচ্ছিক)")}</select>
+  <label>Home Address (স্থায়ী ঠিকানা / গ্রাম-ডাকঘর)</label><textarea id="r_ha" rows="2" placeholder="গ্রাম / রোড, ডাকঘর, উপজেলা লিখুন"></textarea>
   <label style="color:var(--pr);font-weight:700">Educational Qualifications *</label>
   <div id="eduList"></div>
   <button type="button" class="s" onclick="addEduEntry()">➕ আরও Qualification যোগ করুন (Add More)</button>
@@ -1322,8 +1391,14 @@ function onUpaChange() {
   if (!wrap || !el) return;
   wrap.style.display = (el.tagName === "SELECT" && el.value === "Other") ? "block" : "none";
 }
+function onDobChanged() {
+  const el = $("#r_dob"), pk = $("#r_dob_pk"), p = $("#r_prl");
+  if (!el) return;
+  if (pk) pk.value = toIsoDate(el.value);
+  if (p) p.textContent = prl(el.value) ? "PRL Date: " + prl(el.value) : "";
+}
 function resetEduEntries() {
-  eduEntries = [{ cat: "", sub: "", customSub: "", info: "" }];
+  eduEntries = [{ cat: "", sub: "", customSub: "", institute: "", passingYear: "", major: "" }];
 }
 function eduResolvedSub(e) {
   const c = (e.cat || "").trim();
@@ -1340,14 +1415,44 @@ function eduTitle(e) {
   if (c === "Other") return eduResolvedSub(e);
   return c;
 }
+function eduDetailsString(e) {
+  const p = [];
+  if ((e.institute || "").trim()) p.push(e.institute.trim());
+  if ((e.major || "").trim()) p.push("Major: " + e.major.trim());
+  if ((e.passingYear || "").trim()) p.push("Year: " + e.passingYear.trim());
+  return p.join(", ");
+}
+function parseEduDetails(rawInfo) {
+  const s = String(rawInfo || "").trim();
+  if (!s) return { institute: "", passingYear: "", major: "" };
+  let institute = "", passingYear = "", major = "";
+  const instParts = [];
+  for (const seg of s.split(",")) {
+    const t = seg.trim();
+    if (!t) continue;
+    if (/^Major\s*:/i.test(t)) major = t.replace(/^Major\s*:/i, "").trim();
+    else if (/^(Passing\s*)?Year\s*:/i.test(t)) passingYear = t.replace(/^(Passing\s*)?Year\s*:/i, "").trim();
+    else if (/^(Institute|Inst\.?)\s*:/i.test(t)) instParts.push(t.replace(/^(Institute|Inst\.?)\s*:/i, "").trim());
+    else instParts.push(t);
+  }
+  institute = instParts.join(", ");
+  if (!passingYear && institute) {
+    const ym = institute.match(/\b(19\d{2}|20\d{2})\b\s*$/);
+    if (ym) {
+      passingYear = ym[1];
+      institute = institute.slice(0, ym.index).replace(/[,\-\s]+$/, "").trim();
+    }
+  }
+  return { institute, passingYear, major };
+}
 function eduFormatted(e) {
   const t = eduTitle(e);
   if (!t) return "";
-  const info = (e.info || "").trim().replace(/ \| /g, ", ");
+  const info = eduDetailsString(e).replace(/ \| /g, ", ");
   return info ? `${t} (${info})` : t;
 }
 function addEduEntry() {
-  eduEntries.push({ cat: "", sub: "", customSub: "", info: "" });
+  eduEntries.push({ cat: "", sub: "", customSub: "", institute: "", passingYear: "", major: "" });
   renderEduEntries();
 }
 function removeEduEntry(idx) {
@@ -1397,14 +1502,25 @@ function renderEduEntries() {
         <label>Qualification / Degree নাম লিখুন *</label>
         <input value="${esc(e.customSub)}" oninput="eduEntries[${i}].customSub=this.value" placeholder="যেমন: B.A, B.S.S, MPH, PhD">
       ` : ""}
-      <label>Passing Institute & Year</label>
-      <input value="${esc(e.info)}" oninput="eduEntries[${i}].info=this.value">
+      <label>Institute Name</label>
+      <input value="${esc(e.institute || "")}" oninput="eduEntries[${i}].institute=this.value" placeholder="যেমন: Dhaka Nursing College">
+      <div class="row">
+        <div>
+          <label>Passing Year</label>
+          <input value="${esc(e.passingYear || "")}" inputmode="numeric" maxlength="4" oninput="eduEntries[${i}].passingYear=this.value" placeholder="যেমন: 2018">
+        </div>
+        <div>
+          <label>Major / Subject</label>
+          <input value="${esc(e.major || "")}" oninput="eduEntries[${i}].major=this.value" placeholder="যেমন: Science / Nursing">
+        </div>
+      </div>
     </div>
   `).join("");
 }
 function parseEduSegment(seg, fallbackInfo = "") {
   const trimmed = (seg || "").trim();
-  if (!trimmed) return { cat: "", sub: "", customSub: "", info: fallbackInfo || "" };
+  const detEmpty = { institute: "", passingYear: "", major: "" };
+  if (!trimmed) return { cat: "", sub: "", customSub: "", ...(fallbackInfo ? parseEduDetails(fallbackInfo) : detEmpty) };
   let titlePart = trimmed, infoPart = fallbackInfo || "";
   if (!fallbackInfo && trimmed.endsWith(")")) {
     let depth = 0, openIdx = -1;
@@ -1420,32 +1536,34 @@ function parseEduSegment(seg, fallbackInfo = "") {
       infoPart = trimmed.slice(openIdx + 1, -1).trim();
     }
   }
+  const det = parseEduDetails(infoPart);
   if (titlePart.startsWith("Nursing — ")) {
     const subRaw = titlePart.slice("Nursing — ".length).trim();
-    if (EDU.includes(subRaw) && subRaw !== "Other") return { cat: "Nursing", sub: subRaw, customSub: "", info: infoPart };
-    return { cat: "Nursing", sub: "Other", customSub: subRaw, info: infoPart };
+    if (EDU.includes(subRaw) && subRaw !== "Other") return { cat: "Nursing", sub: subRaw, customSub: "", ...det };
+    return { cat: "Nursing", sub: "Other", customSub: subRaw, ...det };
   }
-  if (titlePart === "HSC" || titlePart === "SSC") return { cat: titlePart, sub: "", customSub: "", info: infoPart };
-  return { cat: "Other", sub: "", customSub: titlePart, info: infoPart };
+  if (titlePart === "HSC" || titlePart === "SSC") return { cat: titlePart, sub: "", customSub: "", ...det };
+  return { cat: "Other", sub: "", customSub: titlePart, ...det };
 }
 function parseEduEntriesFromUser(u) {
   const ed = u.education || "", ecVal = (u.eduCat || "").trim(), esVal = (u.eduSub || "").trim(), eiVal = u.eduInfo || "";
   if (ed.includes(" | ")) {
     const parts = ed.split(" | ").map(s => parseEduSegment(s));
-    return parts.length ? parts : [{ cat: "", sub: "", customSub: "", info: "" }];
+    return parts.length ? parts : [{ cat: "", sub: "", customSub: "", institute: "", passingYear: "", major: "" }];
   }
+  const det = parseEduDetails(eiVal);
   if (ed || ecVal || esVal || eiVal) {
     if (ecVal === "Nursing") {
       const subRaw = esVal || (ed.startsWith("Nursing — ") ? ed.slice("Nursing — ".length).trim() : "");
-      if (!subRaw) return [{ cat: "Nursing", sub: "", customSub: "", info: eiVal }];
-      if (EDU.includes(subRaw) && subRaw !== "Other") return [{ cat: "Nursing", sub: subRaw, customSub: "", info: eiVal }];
-      return [{ cat: "Nursing", sub: "Other", customSub: subRaw, info: eiVal }];
+      if (!subRaw) return [{ cat: "Nursing", sub: "", customSub: "", ...det }];
+      if (EDU.includes(subRaw) && subRaw !== "Other") return [{ cat: "Nursing", sub: subRaw, customSub: "", ...det }];
+      return [{ cat: "Nursing", sub: "Other", customSub: subRaw, ...det }];
     }
-    if (ecVal === "HSC" || ecVal === "SSC") return [{ cat: ecVal, sub: "", customSub: "", info: eiVal }];
-    if (ecVal === "Other") return [{ cat: "Other", sub: "", customSub: esVal || ed, info: eiVal }];
+    if (ecVal === "HSC" || ecVal === "SSC") return [{ cat: ecVal, sub: "", customSub: "", ...det }];
+    if (ecVal === "Other") return [{ cat: "Other", sub: "", customSub: esVal || ed, ...det }];
     return [parseEduSegment(ed, eiVal)];
   }
-  return [{ cat: "", sub: "", customSub: "", info: "" }];
+  return [{ cat: "", sub: "", customSub: "", institute: "", passingYear: "", major: "" }];
 }
 function sv(i, v) {
   const e = $("#r_" + i); if (!e) return;
@@ -1469,8 +1587,12 @@ function fill(u) {
   formPhoto = u.photo || null;
   sv("cat", u.category); cat(); sv("des", u.designation);
   sv("name", u.name); sv("fa", u.father); sv("mo", u.mother);
-  sv("dob", u.dob); $("#r_prl").textContent = u.dob ? "PRL Date: " + prl(u.dob) : "";
-  sv("jd", u.joinDate); sv("ph", u.phone); sv("bn", u.bnmc); sv("wp", u.workplace);
+  sv("dob", fmtDate(u.dob));
+  if ($("#r_dob_pk")) $("#r_dob_pk").value = toIsoDate(u.dob);
+  $("#r_prl").textContent = u.dob ? "PRL Date: " + prl(u.dob) : "";
+  sv("jd", fmtDate(u.joinDate));
+  if ($("#r_jd_pk")) $("#r_jd_pk").value = toIsoDate(u.joinDate);
+  sv("ph", u.phone); sv("bn", u.bnmc); sv("wp", u.workplace);
   sv("dv", u.division); dv(); sv("di", u.district); di();
   const preset = UPA[u.district];
   if (preset && u.upazila && !preset.includes(u.upazila)) {
@@ -1478,14 +1600,17 @@ function fill(u) {
   } else {
     sv("up", u.upazila); onUpaChange();
   }
-  sv("ad", u.address);
+  const ap = parseAddressParts(u.address);
+  sv("ad", ap.present);
+  sv("hd", ap.homeDistrict);
+  sv("ha", ap.homeAddress);
   eduEntries = parseEduEntriesFromUser(u);
   renderEduEntries();
   sv("em", u.email);
 }
 function collect() {
   const g = i => ($("#r_" + i) ? $("#r_" + i).value.trim() : "");
-  const list = eduEntries.length ? eduEntries : [{ cat: "", sub: "", customSub: "", info: "" }];
+  const list = eduEntries.length ? eduEntries : [{ cat: "", sub: "", customSub: "", institute: "", passingYear: "", major: "" }];
   const first = list[0];
   const upEl = $("#r_up");
   const upVal = (upEl && upEl.tagName === "SELECT" && upEl.value === "Other") ? g("up_custom") : g("up");
@@ -1494,23 +1619,26 @@ function collect() {
     : list.map(eduFormatted).filter(Boolean).join(" | ");
   return {
     category: g("cat"), name: g("name"), father: g("fa"), mother: g("mo"),
-    dob: g("dob"), joinDate: g("jd"), phone: g("ph"), bnmc: g("bn"),
+    dob: fmtDate(g("dob")), joinDate: fmtDate(g("jd")), phone: g("ph"), bnmc: g("bn"),
     designation: g("des"), workplace: g("wp"), division: g("dv"),
-    district: g("di"), upazila: upVal, address: g("ad"),
+    district: g("di"), upazila: upVal,
+    address: buildEncodedAddress(g("ad"), g("hd"), g("ha")),
     eduCat: (first.cat || "").trim(),
     eduSub: eduResolvedSub(first),
     education: educationVal,
-    eduInfo: list.length === 1 ? (first.info || "").trim() : "",
+    eduInfo: list.length === 1 ? eduDetailsString(first) : "",
     email: g("em"), photo: formPhoto
   };
 }
 function check(d) {
-  const list = eduEntries.length ? eduEntries : [{ cat: "", sub: "", customSub: "", info: "" }];
+  const list = eduEntries.length ? eduEntries : [{ cat: "", sub: "", customSub: "", institute: "", passingYear: "", major: "" }];
   if (!eduTitle(list[0])) return "সব বাধ্যতামূলক তথ্য দিন (education)";
   if (list.slice(1).some(e => !eduTitle(e))) return "যোগ করা প্রতিটি শিক্ষাগত যোগ্যতার তথ্য পূরণ করুন অথবা অতিরিক্ত ঘরটি মুছুন";
   for (const k of ["category", "name", "father", "mother", "dob", "joinDate", "phone", "bnmc", "designation", "workplace", "division", "district", "upazila", "education"]) {
     if (!d[k]) return "সব বাধ্যতামূলক তথ্য দিন (" + k + ")";
   }
+  if (!parseAnyDate(d.dob)) return "Date of Birth অবশ্যই dd/mm/yyyy ফরম্যাটে দিন (যেমন: 25/12/1992)";
+  if (!parseAnyDate(d.joinDate)) return "Joining Date অবশ্যই dd/mm/yyyy ফরম্যাটে দিন (যেমন: 15/06/2020)";
   if (!/^01[3-9]\d{8}$/.test(d.phone)) return "সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন";
   return "";
 }
@@ -1574,10 +1702,18 @@ async function chpw() {
   note = "Password পরিবর্তন হয়েছে ✅"; draw();
 }
 
-const PF = [["name","Name"],["father","Father's Name"],["mother","Mother's Name"],["dob","Date of Birth"],["prl","PRL Date"],["joinDate","Joining Date"],["phone","Phone"],["bnmc","BNMC Reg no."],["category","Category"],["designation","Designation"],["workplace","Hospital / Working Place"],["division","Division"],["district","District"],["upazila","Upazila/Thana"],["address","Address"],["education","Education"],["email","Email"]];
+const PF = [["name","Name"],["father","Father's Name"],["mother","Mother's Name"],["dob","Date of Birth"],["prl","PRL Date"],["joinDate","Joining Date"],["phone","Phone"],["bnmc","BNMC Reg no."],["category","Category"],["designation","Designation"],["workplace","Hospital / Working Place"],["division","Division"],["district","District"],["upazila","Upazila/Thana"],["address","Present Address"],["homeDistrict","Home District"],["homeAddress","Home Address"],["education","Education"],["email","Email"]];
 let pcols = PF.map(x => x[0]);
 const ALLD = Object.values(DIV).flat().sort();
-const gv = (x, k) => k === "prl" ? prl(x.dob) : (x[k] || "");
+const gv = (x, k) => {
+  if (k === "prl") return prl(x.dob);
+  if (k === "dob") return fmtDate(x.dob);
+  if (k === "joinDate") return fmtDate(x.joinDate);
+  if (k === "address") return parseAddressParts(x.address).present;
+  if (k === "homeDistrict") return parseAddressParts(x.address).homeDistrict;
+  if (k === "homeAddress") return parseAddressParts(x.address).homeAddress;
+  return x[k] || "";
+};
 
 function dirView() {
   return `<div class="card">
@@ -1621,7 +1757,8 @@ function doPrint() {
   if (!r.length) { $("#pm").textContent = "Print করার মতো কোনো তথ্য নেই"; return; }
   $("#pm").textContent = "";
   const f = [["fd","Division"],["fi","District"],["fu","Upazila/Thana"],["fh","Hospital"],["fc","Category"],["fs","Designation"]].map(([i, l]) => $("#" + i).value ? l + ": " + $("#" + i).value : "").filter(Boolean).join(" | ");
-  $("#pa").innerHTML = `<h2 style="margin:0">BD Nurses Directory</h2><p style="margin:4px 0 10px">${esc(f || "All records")} — মোট: ${r.length} জন — ${new Date().toLocaleDateString("en-GB")}</p><table><thead><tr><th>#</th>${cols.map(c => `<th>${c[1]}</th>`).join("")}</tr></thead><tbody>${r.map((x, n) => `<tr><td>${n + 1}</td>${cols.map(c => `<td>${esc(gv(x, c[0]))}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  const nowStr = fmtDate(new Date().toISOString());
+  $("#pa").innerHTML = `<h2 style="margin:0">BD Nurses Directory</h2><p style="margin:4px 0 10px">${esc(f || "All records")} — মোট: ${r.length} জন — ${esc(nowStr)}</p><table><thead><tr><th>#</th>${cols.map(c => `<th>${c[1]}</th>`).join("")}</tr></thead><tbody>${r.map((x, n) => `<tr><td>${n + 1}</td>${cols.map(c => `<td>${esc(gv(x, c[0]))}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
   $("#pv").innerHTML = $("#pa").innerHTML;
   try { window.print(); } catch (e) { $("#pm").textContent = "এই browser এ print বন্ধ আছে"; }
 }
@@ -1631,8 +1768,10 @@ function formatEduHtml(x) {
   return esc(ed) + (x.eduInfo ? " (" + esc(x.eduInfo) + ")" : "");
 }
 function profView(x, extra = "") {
+  const ap = parseAddressParts(x.address);
+  const homeStr = [ap.homeAddress, ap.homeDistrict].filter(Boolean).join(", ");
   return `<div class="card">${x.photo ? `<img src="${x.photo}" alt="" class="avatar" style="float:right">` : ""}<b>${esc(x.name)}</b> <span class="tag">${esc(x.designation)}</span><br><span class="tag">${esc(x.category)}</span>${x.status && x.status !== "approved" ? `<span class="tag" style="background:#fef3c7;color:#92400e">${esc(x.status)}</span>` : ""}
-  <div class="mu" style="margin-top:6px">📞 <a href="tel:${esc(x.phone)}">${esc(x.phone)}</a> · BNMC: ${esc(x.bnmc)}<br>🏥 ${esc(x.workplace)}<br>📍 ${esc(x.upazila)}, ${esc(x.district)}, ${esc(x.division)}${x.address ? " — " + esc(x.address) : ""}<br>🎓 ${formatEduHtml(x)}<br>Father: ${esc(x.father)} · Mother: ${esc(x.mother)}<br>DOB: ${esc(x.dob)} · <b>PRL: ${esc(prl(x.dob))}</b><br>Joining Date: ${esc(x.joinDate || "—")}${x.email ? "<br>✉️ " + esc(x.email) : ""}</div>${extra}</div>`;
+  <div class="mu" style="margin-top:6px">📞 <a href="tel:${esc(x.phone)}">${esc(x.phone)}</a> · BNMC: ${esc(x.bnmc)}<br>🏥 ${esc(x.workplace)}<br>📍 ${esc(x.upazila)}, ${esc(x.district)}, ${esc(x.division)}${ap.present ? " — " + esc(ap.present) : ""}${homeStr ? `<br>🏠 Home: ${esc(homeStr)}` : ""}<br>🎓 ${formatEduHtml(x)}<br>Father: ${esc(x.father)} · Mother: ${esc(x.mother)}<br>DOB: ${esc(fmtDate(x.dob))} · <b>PRL: ${esc(prl(x.dob))}</b><br>Joining Date: ${esc(fmtDate(x.joinDate) || "—")}${x.email ? "<br>✉️ " + esc(x.email) : ""}</div>${extra}</div>`;
 }
 
 function meView() {

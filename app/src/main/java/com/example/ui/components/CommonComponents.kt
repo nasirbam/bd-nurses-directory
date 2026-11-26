@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocalHospital
 import androidx.compose.material.icons.filled.LocationOn
@@ -97,7 +98,7 @@ fun LiveClockAndNewsTickerBar(
     SimpleDateFormat("HH:mm:ss", Locale.ENGLISH).format(Date(nowMillis))
   }
   val dateText = remember(nowMillis) {
-    SimpleDateFormat("dd MMM yyyy, EEE", Locale.ENGLISH).format(Date(nowMillis))
+    SimpleDateFormat("dd/MM/yyyy, EEE", Locale.ENGLISH).format(Date(nowMillis))
   }
 
   Surface(
@@ -346,13 +347,15 @@ fun IsoDatePickerField(
 ) {
   var showPicker by remember { mutableStateOf(false) }
 
+  val displayValue = remember(value) { DirectoryConstants.formatDateDdMmYyyy(value) }
+
   Box(modifier = modifier) {
     OutlinedTextField(
-      value = value,
+      value = displayValue,
       onValueChange = {},
       readOnly = true,
       label = { Text(label) },
-      placeholder = { Text("YYYY-MM-DD") },
+      placeholder = { Text("DD/MM/YYYY") },
       trailingIcon = {
         Icon(imageVector = Icons.Filled.Cake, contentDescription = "Pick $label")
       },
@@ -365,17 +368,16 @@ fun IsoDatePickerField(
   if (showPicker) {
     val initialMillis =
       remember(value) {
-        if (value.isBlank()) null
-        else {
-          try {
-            SimpleDateFormat("yyyy-MM-dd", Locale.US)
-              .apply { timeZone = TimeZone.getTimeZone("UTC") }
-              .parse(value)
-              ?.time
-          } catch (_: Exception) {
-            null
-          }
-        }
+        val parsed = DirectoryConstants.parseAnyDate(value) ?: return@remember null
+        val localCal = java.util.Calendar.getInstance().apply { time = parsed }
+        java.util.Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+          clear()
+          set(
+            localCal.get(java.util.Calendar.YEAR),
+            localCal.get(java.util.Calendar.MONTH),
+            localCal.get(java.util.Calendar.DAY_OF_MONTH),
+          )
+        }.timeInMillis
       }
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
 
@@ -386,7 +388,7 @@ fun IsoDatePickerField(
           onClick = {
             datePickerState.selectedDateMillis?.let { millis ->
               val formatted =
-                SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH)
                   .apply { timeZone = TimeZone.getTimeZone("UTC") }
                   .format(Date(millis))
               onValueSelected(formatted)
@@ -417,8 +419,11 @@ fun NurseProfileCard(
 ) {
   val context = LocalContext.current
   val avatarBitmap = remember(nurse.photo) { ImageHelper.decodeBase64Avatar(nurse.photo) }
+  val addrParts = remember(nurse.address) { DirectoryConstants.parseAddressParts(nurse.address) }
   val prlDate = remember(nurse.dob, nurse.prl) {
-    DirectoryConstants.calculatePrlDate(nurse.dob).ifBlank { nurse.prl }
+    DirectoryConstants.calculatePrlDate(nurse.dob).ifBlank {
+      DirectoryConstants.formatDateDdMmYyyy(nurse.prl)
+    }
   }
 
   Card(
@@ -519,8 +524,16 @@ fun NurseProfileCard(
         icon = Icons.Filled.LocationOn,
         text =
           "${nurse.upazila}, ${nurse.district}, ${nurse.division}" +
-            if (nurse.address.isNotBlank()) " — ${nurse.address}" else "",
+            if (addrParts.presentAddress.isNotBlank()) " — ${addrParts.presentAddress}" else "",
       )
+      if (addrParts.homeDistrict.isNotBlank() || addrParts.homeAddress.isNotBlank()) {
+        val homeText =
+          listOfNotNull(
+            addrParts.homeDistrict.takeIf { it.isNotBlank() }?.let { "Home District: $it" },
+            addrParts.homeAddress.takeIf { it.isNotBlank() },
+          ).joinToString(" — ")
+        InfoLine(icon = Icons.Filled.Home, text = homeText)
+      }
       val formattedEducation =
         remember(nurse.education, nurse.eduInfo) {
           if (nurse.education.contains(" | ")) {
@@ -539,12 +552,14 @@ fun NurseProfileCard(
       )
       InfoLine(
         icon = Icons.Filled.Cake,
-        text = "DOB: ${nurse.dob}  ·  PRL: $prlDate",
+        text =
+          "DOB: ${DirectoryConstants.formatDateDdMmYyyy(nurse.dob)}  ·  PRL: $prlDate",
         highlight = true,
       )
       InfoLine(
         icon = Icons.Filled.WorkHistory,
-        text = "Joining Date: ${nurse.joinDate.ifBlank { "—" }}",
+        text =
+          "Joining Date: ${DirectoryConstants.formatDateDdMmYyyy(nurse.joinDate).ifBlank { "—" }}",
       )
       if (nurse.email.isNotBlank()) {
         InfoLine(icon = Icons.Filled.Email, text = nurse.email)

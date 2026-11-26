@@ -8,8 +8,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.R
 
-val DisplayFontFamily = FontFamily(Font(R.font.tiro_bangla, FontWeight.Normal))
-val BodyFontFamily = FontFamily(Font(R.font.tiro_bangla, FontWeight.Normal))
+val DisplayFontFamily = FontFamily(Font(R.font.plus_jakarta_sans, FontWeight.Normal))
+val BodyFontFamily = FontFamily(Font(R.font.plus_jakarta_sans, FontWeight.Normal))
 
 val AppTypography =
   Typography(

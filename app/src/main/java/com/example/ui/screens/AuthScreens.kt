@@ -809,10 +809,30 @@ fun NurseFormCard(
       OutlinedTextField(
         value = draft.address,
         onValueChange = { v -> onDraftChange { it.copy(address = v) } },
-        label = { Text("Address") },
+        label = { Text("Present / Working Address") },
         minLines = 2,
         maxLines = 3,
         modifier = Modifier.fillMaxWidth().testTag("form_address_input"),
+      )
+
+      DropdownField(
+        label = "Home District (নিজ জেলা)",
+        selectedValue = draft.homeDistrict,
+        placeholder = "Select Home District",
+        options = DirectoryConstants.ALL_DISTRICTS,
+        includeEmptyOption = true,
+        onSelected = { hd -> onDraftChange { it.copy(homeDistrict = hd) } },
+        testTag = "form_home_district_dropdown",
+      )
+
+      OutlinedTextField(
+        value = draft.homeAddress,
+        onValueChange = { v -> onDraftChange { it.copy(homeAddress = v) } },
+        label = { Text("Home Address (গ্রামের বাড়ি / স্থায়ী ঠিকানা)") },
+        placeholder = { Text("গ্রাম/বাড়ি, ডাকঘর, উপজেলা") },
+        minLines = 2,
+        maxLines = 3,
+        modifier = Modifier.fillMaxWidth().testTag("form_home_address_input"),
       )
 
       val eduEntries = draft.educationEntries.ifEmpty { listOf(EducationEntry()) }
@@ -935,14 +955,39 @@ fun NurseFormCard(
             }
 
             OutlinedTextField(
-              value = entry.info,
-              onValueChange = { v -> updateEntry(index, entry.copy(info = v)) },
-              label = { Text("Passing Institute & Year") },
+              value = entry.institute,
+              onValueChange = { v -> updateEntry(index, entry.copy(institute = v)) },
+              label = { Text("Institute Name") },
+              placeholder = { Text("প্রতিষ্ঠানের নাম") },
               singleLine = true,
               modifier =
                 Modifier.fillMaxWidth()
-                  .testTag(if (index == 0) "form_edu_info_input" else "form_edu_info_input_$index"),
+                  .testTag(if (index == 0) "form_edu_institute_input" else "form_edu_institute_input_$index"),
             )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+              OutlinedTextField(
+                value = entry.passingYear,
+                onValueChange = { v -> updateEntry(index, entry.copy(passingYear = v)) },
+                label = { Text("Passing Year") },
+                placeholder = { Text("e.g. 2018") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier =
+                  Modifier.weight(1f)
+                    .testTag(if (index == 0) "form_edu_year_input" else "form_edu_year_input_$index"),
+              )
+              OutlinedTextField(
+                value = entry.major,
+                onValueChange = { v -> updateEntry(index, entry.copy(major = v)) },
+                label = { Text("Major / Subject") },
+                placeholder = { Text("e.g. Science / Nursing") },
+                singleLine = true,
+                modifier =
+                  Modifier.weight(1f)
+                    .testTag(if (index == 0) "form_edu_major_input" else "form_edu_major_input_$index"),
+              )
+            }
           }
         }
       }

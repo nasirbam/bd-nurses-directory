@@ -139,7 +139,9 @@ data class EducationEntry(
   val cat: String = "",
   val sub: String = "",
   val customSub: String = "",
-  val info: String = "",
+  val institute: String = "",
+  val passingYear: String = "",
+  val major: String = "",
 ) {
   fun resolvedSub(): String =
     when (cat.trim()) {
@@ -160,12 +162,52 @@ data class EducationEntry(
     }
   }
 
+  fun detailsString(): String {
+    val parts = mutableListOf<String>()
+    val cleanInst = institute.trim().replace(" | ", ", ")
+    val cleanMajor = major.trim().replace(" | ", ", ")
+    val cleanYear = passingYear.trim().replace(" | ", ", ")
+    if (cleanInst.isNotBlank()) parts.add(cleanInst)
+    if (cleanMajor.isNotBlank()) parts.add("Major: $cleanMajor")
+    if (cleanYear.isNotBlank()) parts.add("Year: $cleanYear")
+    return parts.joinToString(", ")
+  }
+
   fun formattedWithInfo(): String {
     val t = title()
     if (t.isBlank()) return ""
-    val cleanInfo = info.trim().replace(" | ", ", ")
+    val cleanInfo = detailsString()
     return if (cleanInfo.isNotBlank()) "$t ($cleanInfo)" else t
   }
+}
+
+private data class ParsedEduDetails(
+  val institute: String = "",
+  val passingYear: String = "",
+  val major: String = "",
+)
+
+private fun parseEduDetails(rawInfo: String): ParsedEduDetails {
+  val trimmed = rawInfo.trim()
+  if (trimmed.isBlank()) return ParsedEduDetails()
+  val instParts = mutableListOf<String>()
+  var majorVal = ""
+  var yearVal = ""
+  trimmed.split(",").forEach { token ->
+    val part = token.trim()
+    when {
+      part.startsWith("Major:", ignoreCase = true) ->
+        majorVal = part.substringAfter(":").trim()
+      part.startsWith("Year:", ignoreCase = true) ->
+        yearVal = part.substringAfter(":").trim()
+      part.isNotEmpty() -> instParts.add(part)
+    }
+  }
+  return ParsedEduDetails(
+    institute = instParts.joinToString(", "),
+    passingYear = yearVal,
+    major = majorVal,
+  )
 }
 
 data class NurseFormDraft(
@@ -183,12 +225,17 @@ data class NurseFormDraft(
   val district: String = "",
   val upazila: String = "",
   val address: String = "",
+  val homeDistrict: String = "",
+  val homeAddress: String = "",
   val educationEntries: List<EducationEntry> = listOf(EducationEntry()),
   val email: String = "",
   val photo: String? = null,
 ) {
   private val effectiveEntries: List<EducationEntry>
     get() = educationEntries.ifEmpty { listOf(EducationEntry()) }
+
+  val computedAddress: String
+    get() = DirectoryConstants.buildEncodedAddress(address, homeDistrict, homeAddress)
 
   val computedEduCat: String
     get() = effectiveEntries.first().cat.trim()
@@ -197,7 +244,7 @@ data class NurseFormDraft(
     get() = effectiveEntries.first().resolvedSub()
 
   val computedEduInfo: String
-    get() = if (effectiveEntries.size == 1) effectiveEntries.first().info.trim() else ""
+    get() = if (effectiveEntries.size == 1) effectiveEntries.first().detailsString() else ""
 
   val computedEducation: String
     get() {
@@ -228,6 +275,12 @@ data class NurseFormDraft(
     for ((key, value) in required) {
       if (value.isBlank()) return "সব বাধ্যতামূলক তথ্য দিন ($key)"
     }
+    if (DirectoryConstants.parseAnyDate(dob) == null) {
+      return "Date of Birth সঠিক dd/mm/yyyy ফরম্যাটে দিন"
+    }
+    if (DirectoryConstants.parseAnyDate(joinDate) == null) {
+      return "Joining Date সঠিক dd/mm/yyyy ফরম্যাটে দিন"
+    }
     if (effectiveEntries.drop(1).any { it.title().isBlank() }) {
       return "যোগ করা প্রতিটি শিক্ষাগত যোগ্যতার তথ্য পূরণ করুন অথবা অতিরিক্ত ঘরটি মুছে দিন"
     }
@@ -240,7 +293,10 @@ data class NurseFormDraft(
 
 private fun parseEducationSegment(segment: String, fallbackInfo: String = ""): EducationEntry {
   val trimmed = segment.trim()
-  if (trimmed.isBlank()) return EducationEntry(info = fallbackInfo)
+  if (trimmed.isBlank()) {
+    val d = parseEduDetails(fallbackInfo)
+    return EducationEntry(institute = d.institute, passingYear = d.passingYear, major = d.major)
+  }
 
   var titlePart = trimmed
   var infoPart = fallbackInfo
@@ -266,17 +322,44 @@ private fun parseEducationSegment(segment: String, fallbackInfo: String = ""): E
     }
   }
 
+  val d = parseEduDetails(infoPart)
   return when {
     titlePart.startsWith("Nursing — ") -> {
       val subRaw = titlePart.removePrefix("Nursing — ").trim()
       if (subRaw in DirectoryConstants.NURSING_SUB_CATEGORIES && subRaw != "Other") {
-        EducationEntry(cat = "Nursing", sub = subRaw, info = infoPart)
+        EducationEntry(
+          cat = "Nursing",
+          sub = subRaw,
+          institute = d.institute,
+          passingYear = d.passingYear,
+          major = d.major,
+        )
       } else {
-        EducationEntry(cat = "Nursing", sub = "Other", customSub = subRaw, info = infoPart)
+        EducationEntry(
+          cat = "Nursing",
+          sub = "Other",
+          customSub = subRaw,
+          institute = d.institute,
+          passingYear = d.passingYear,
+          major = d.major,
+        )
       }
     }
-    titlePart == "HSC" || titlePart == "SSC" -> EducationEntry(cat = titlePart, info = infoPart)
-    else -> EducationEntry(cat = "Other", customSub = titlePart, info = infoPart)
+    titlePart == "HSC" || titlePart == "SSC" ->
+      EducationEntry(
+        cat = titlePart,
+        institute = d.institute,
+        passingYear = d.passingYear,
+        major = d.major,
+      )
+    else ->
+      EducationEntry(
+        cat = "Other",
+        customSub = titlePart,
+        institute = d.institute,
+        passingYear = d.passingYear,
+        major = d.major,
+      )
   }
 }
 
@@ -285,20 +368,23 @@ fun NurseRecord.toFormDraft(): NurseFormDraft {
     if (education.contains(" | ")) {
       education.split(" | ").map { parseEducationSegment(it) }.ifEmpty { listOf(EducationEntry()) }
     } else if (education.isNotBlank() || eduCat.isNotBlank() || eduSub.isNotBlank() || eduInfo.isNotBlank()) {
+      val d = parseEduDetails(eduInfo)
       val single =
         when (eduCat.trim()) {
           "Nursing" -> {
             val subRaw = eduSub.trim().ifBlank { education.removePrefix("Nursing — ").trim() }
             if (subRaw.isBlank()) {
-              EducationEntry(cat = "Nursing", info = eduInfo)
+              EducationEntry(cat = "Nursing", institute = d.institute, passingYear = d.passingYear, major = d.major)
             } else if (subRaw in DirectoryConstants.NURSING_SUB_CATEGORIES && subRaw != "Other") {
-              EducationEntry(cat = "Nursing", sub = subRaw, info = eduInfo)
+              EducationEntry(cat = "Nursing", sub = subRaw, institute = d.institute, passingYear = d.passingYear, major = d.major)
             } else {
-              EducationEntry(cat = "Nursing", sub = "Other", customSub = subRaw, info = eduInfo)
+              EducationEntry(cat = "Nursing", sub = "Other", customSub = subRaw, institute = d.institute, passingYear = d.passingYear, major = d.major)
             }
           }
-          "HSC", "SSC" -> EducationEntry(cat = eduCat.trim(), info = eduInfo)
-          "Other" -> EducationEntry(cat = "Other", customSub = eduSub.trim().ifBlank { education }, info = eduInfo)
+          "HSC", "SSC" ->
+            EducationEntry(cat = eduCat.trim(), institute = d.institute, passingYear = d.passingYear, major = d.major)
+          "Other" ->
+            EducationEntry(cat = "Other", customSub = eduSub.trim().ifBlank { education }, institute = d.institute, passingYear = d.passingYear, major = d.major)
           else -> parseEducationSegment(education, fallbackInfo = eduInfo)
         }
       listOf(single)
@@ -306,13 +392,15 @@ fun NurseRecord.toFormDraft(): NurseFormDraft {
       listOf(EducationEntry())
     }
 
+  val addrParts = DirectoryConstants.parseAddressParts(address)
+
   return NurseFormDraft(
     category = category,
     name = name,
     father = father,
     mother = mother,
-    dob = dob,
-    joinDate = joinDate,
+    dob = DirectoryConstants.formatDateDdMmYyyy(dob),
+    joinDate = DirectoryConstants.formatDateDdMmYyyy(joinDate),
     phone = phone,
     bnmc = bnmc,
     designation = designation,
@@ -320,7 +408,9 @@ fun NurseRecord.toFormDraft(): NurseFormDraft {
     division = division,
     district = district,
     upazila = upazila,
-    address = address,
+    address = addrParts.presentAddress,
+    homeDistrict = addrParts.homeDistrict,
+    homeAddress = addrParts.homeAddress,
     educationEntries = parsedEntries,
     email = email,
     photo = photo,

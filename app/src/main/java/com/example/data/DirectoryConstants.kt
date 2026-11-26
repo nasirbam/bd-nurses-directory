@@ -693,6 +693,8 @@ object DirectoryConstants {
       "district" to "District",
       "upazila" to "Upazila/Thana",
       "address" to "Address",
+      "homeDistrict" to "Home District",
+      "homeAddress" to "Home Address",
       "education" to "Education",
       "email" to "Email",
     )
@@ -706,29 +708,96 @@ object DirectoryConstants {
     return bytes.joinToString("") { "%02x".format(it) }
   }
 
-  fun calculatePrlDate(dobIso: String): String {
-    if (dobIso.isBlank()) return ""
-    return try {
-      val parser = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }
-      val date = parser.parse(dobIso.trim()) ?: return ""
-      val cal = Calendar.getInstance().apply {
-        time = date
-        add(Calendar.YEAR, 59)
+  private const val HOME_DIST_PREFIX = "🏠 Home District:"
+  private const val HOME_ADDR_PREFIX = "🏠 Home Address:"
+
+  data class AddressParts(
+    val presentAddress: String = "",
+    val homeDistrict: String = "",
+    val homeAddress: String = "",
+  )
+
+  fun parseAddressParts(rawAddress: String): AddressParts {
+    if (rawAddress.isBlank()) return AddressParts()
+    val presentLines = mutableListOf<String>()
+    var homeDistrict = ""
+    var homeAddress = ""
+    rawAddress.lines().forEach { line ->
+      val t = line.trim()
+      when {
+        t.startsWith(HOME_DIST_PREFIX) -> homeDistrict = t.removePrefix(HOME_DIST_PREFIX).trim()
+        t.startsWith(HOME_ADDR_PREFIX) -> homeAddress = t.removePrefix(HOME_ADDR_PREFIX).trim()
+        t.isNotEmpty() -> presentLines.add(t)
       }
-      SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH).format(cal.time)
-    } catch (_: Exception) {
-      ""
     }
+    return AddressParts(
+      presentAddress = presentLines.joinToString("\n"),
+      homeDistrict = homeDistrict,
+      homeAddress = homeAddress,
+    )
   }
 
-  fun fieldValue(record: NurseRecord, key: String): String =
-    when (key) {
+  fun buildEncodedAddress(
+    presentAddress: String,
+    homeDistrict: String,
+    homeAddress: String,
+  ): String {
+    val lines = mutableListOf<String>()
+    val cleanPresent =
+      presentAddress
+        .lines()
+        .map { it.trim() }
+        .filter {
+          it.isNotEmpty() && !it.startsWith(HOME_DIST_PREFIX) && !it.startsWith(HOME_ADDR_PREFIX)
+        }
+        .joinToString("\n")
+    if (cleanPresent.isNotBlank()) lines.add(cleanPresent)
+    if (homeDistrict.isNotBlank()) lines.add("$HOME_DIST_PREFIX ${homeDistrict.trim()}")
+    if (homeAddress.isNotBlank()) lines.add("$HOME_ADDR_PREFIX ${homeAddress.trim()}")
+    return lines.joinToString("\n")
+  }
+
+  fun parseAnyDate(rawDate: String): java.util.Date? {
+    val trimmed = rawDate.trim()
+    if (trimmed.isBlank()) return null
+    val patterns = listOf("dd/MM/yyyy", "yyyy-MM-dd", "dd-MM-yyyy", "dd MMMM yyyy", "dd MMM yyyy")
+    for (pattern in patterns) {
+      try {
+        val sdf = SimpleDateFormat(pattern, Locale.ENGLISH).apply { isLenient = false }
+        val parsed = sdf.parse(trimmed)
+        if (parsed != null) return parsed
+      } catch (_: Exception) {
+        // Try next pattern
+      }
+    }
+    return null
+  }
+
+  fun formatDateDdMmYyyy(rawDate: String): String {
+    val trimmed = rawDate.trim()
+    if (trimmed.isBlank()) return ""
+    val parsed = parseAnyDate(trimmed) ?: return trimmed
+    return SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH).format(parsed)
+  }
+
+  fun calculatePrlDate(dobStr: String): String {
+    val date = parseAnyDate(dobStr) ?: return ""
+    val cal = Calendar.getInstance().apply {
+      time = date
+      add(Calendar.YEAR, 59)
+    }
+    return SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH).format(cal.time)
+  }
+
+  fun fieldValue(record: NurseRecord, key: String): String {
+    val addrParts = parseAddressParts(record.address)
+    return when (key) {
       "name" -> record.name
       "father" -> record.father
       "mother" -> record.mother
-      "dob" -> record.dob
-      "prl" -> calculatePrlDate(record.dob).ifBlank { record.prl }
-      "joinDate" -> record.joinDate
+      "dob" -> formatDateDdMmYyyy(record.dob)
+      "prl" -> calculatePrlDate(record.dob).ifBlank { formatDateDdMmYyyy(record.prl) }
+      "joinDate" -> formatDateDdMmYyyy(record.joinDate)
       "phone" -> record.phone
       "bnmc" -> record.bnmc
       "category" -> record.category
@@ -737,9 +806,12 @@ object DirectoryConstants {
       "division" -> record.division
       "district" -> record.district
       "upazila" -> record.upazila
-      "address" -> record.address
+      "address" -> addrParts.presentAddress
+      "homeDistrict" -> addrParts.homeDistrict
+      "homeAddress" -> addrParts.homeAddress
       "education" -> record.education
       "email" -> record.email
       else -> ""
     }
+  }
 }
