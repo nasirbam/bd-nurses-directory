@@ -521,11 +521,17 @@ fun NurseProfileCard(
           "${nurse.upazila}, ${nurse.district}, ${nurse.division}" +
             if (nurse.address.isNotBlank()) " — ${nurse.address}" else "",
       )
+      val formattedEducation =
+        remember(nurse.education, nurse.eduInfo) {
+          if (nurse.education.contains(" | ")) {
+            nurse.education.split(" | ").joinToString("\n• ", prefix = "• ")
+          } else {
+            nurse.education + if (nurse.eduInfo.isNotBlank()) " (${nurse.eduInfo})" else ""
+          }
+        }
       InfoLine(
         icon = Icons.Filled.School,
-        text =
-          nurse.education +
-            if (nurse.eduInfo.isNotBlank()) " (${nurse.eduInfo})" else "",
+        text = formattedEducation,
       )
       InfoLine(
         icon = Icons.Filled.Badge,

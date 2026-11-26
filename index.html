@@ -4,9 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>BD Nurses Directory</title>
+<link href="https://sonnetdp.github.io/nikosh/css/nikosh.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <style>
+@font-face{
+  font-family:'NikoshBAN';
+  src:local('NikoshBAN'),local('Nikosh'),url('https://cdn.jsdelivr.net/gh/hmoazzem/bangla-fonts/NikoshBAN.ttf') format('truetype');
+  font-display:swap;
+}
 :root{
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
@@ -37,7 +44,7 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{
   margin:0;
   color:var(--tx);
-  font:15px/1.5 system-ui,"Noto Sans Bengali",sans-serif;
+  font:15px/1.5 'NikoshBAN','Nikosh','Noto Serif Bengali',system-ui,sans-serif;
   min-height:100vh;
   background-color:var(--bg);
   background-image:
@@ -258,6 +265,31 @@ button.s{
   background:#000;
   border:1px solid var(--bd);
 }
+.edu-item{
+  border:1px solid var(--bd);
+  border-radius:12px;
+  padding:11px 12px;
+  margin-top:8px;
+  background:rgba(15,118,110,0.04);
+}
+.edu-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+  font-weight:700;
+  color:var(--pr);
+}
+.edu-rm{
+  background:none;
+  border:1px solid var(--er);
+  color:var(--er);
+  border-radius:7px;
+  padding:3px 9px;
+  font-size:12px;
+  cursor:pointer;
+}
 #pa{display:none}
 #pv table{border-collapse:collapse;width:100%;font-size:12px}
 #pv th,#pv td{border:1px solid var(--bd);padding:4px 6px;text-align:left;white-space:nowrap}
@@ -266,7 +298,7 @@ button.s{
   header,.topbar-meta,main,.modal-backdrop{display:none!important}
   :root{padding:0}
   body{background:#fff!important}
-  #pa{display:block;color:#000;background:#fff;font-family:system-ui,"Noto Sans Bengali",sans-serif}
+  #pa{display:block;color:#000;background:#fff;font-family:'NikoshBAN','Nikosh','Noto Serif Bengali',system-ui,sans-serif}
   #pa table{border-collapse:collapse;width:100%;font-size:12px}
   #pa th,#pa td{border:1px solid #444;padding:4px 6px;text-align:left}
   #pa th{background:#e5e5e5}
@@ -389,6 +421,7 @@ const CAT = {
   "Student Nurse/Midwife":["Student Nurse","Student Midwife"]
 };
 const EDU = ["Diploma in Nursing Science & Midwifery","Diploma in Midwifery","B.Sc in Nursing","Post Basic B.Sc in Nursing","B.Sc in Public Health Nursing","M.Sc in Nursing","Other"];
+const EDU_CAT = ["Nursing","HSC","SSC","Other"];
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -396,6 +429,7 @@ const H = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", ne
 
 let all = [], me = null, tab = "dir", msg = "", view = "login", editing = null, addingByManager = false, note = "";
 let formPhoto = null, showPwPrompt = false, recSent = false, recPhone = "", recMaskedEmail = "";
+let eduEntries = [{ cat: "", sub: "", customSub: "", info: "" }];
 let editingMgrId = null, rtConnected = false, ws = null, hbTimer = null, syncInFlight = false;
 let qrNursePhone = null, detailNursePhone = null, showQrScanModal = false, qrScanMsg = "";
 let qrScanStream = null, qrScanTimer = null;
@@ -1017,7 +1051,7 @@ function draw() {
       view === "forgot" ? forgotForm() :
       view === "submitted" ? submittedView() :
       loginForm();
-    if (view === "register") bindFormPhotoPreview();
+    if (view === "register") { bindFormPhotoPreview(); renderEduEntries(); }
     return;
   }
 
@@ -1046,6 +1080,7 @@ function draw() {
   if (addingByManager) {
     prefillManagerScope();
     bindFormPhotoPreview();
+    renderEduEntries();
   } else if (editing) {
     const u = all.find(x => x.phone === editing);
     if (u) fill(u);
@@ -1074,7 +1109,7 @@ function loginForm() {
   <button class="p" onclick="login()">Login</button>
   <div class="msg">${esc(msg)}</div>
   <button class="s" onclick="view='forgot';recSent=false;msg='';draw()">Password ভুলে গেছেন?</button>
-  <button class="s" onclick="formPhoto=null;view='register';msg='';draw()">Register (নতুন নিবন্ধন)</button></div>`;
+  <button class="s" onclick="formPhoto=null;resetEduEntries();view='register';msg='';draw()">Register (নতুন নিবন্ধন)</button></div>`;
 }
 
 function adminForm() {
@@ -1240,13 +1275,13 @@ function regForm(ed, byMgr = false) {
   <label>Upazila/Thana *</label><div id="r_upw"><select id="r_up" onchange="onUpaChange()"><option value="">Select district first</option></select></div>
   <div id="r_up_custom_wrap" style="display:none"><label>Custom Upazila/Thana নাম লিখুন *</label><input id="r_up_custom" placeholder="Upazila/Thana লিখুন"></div>
   <label>Address</label><textarea id="r_ad" rows="2"></textarea>
-  <label>Educational Qualification — Category *</label><select id="r_ec" onchange="ec()">${opt(["Nursing", "HSC", "SSC"], "Select")}</select>
-  <div id="r_esw" style="display:none"><label>Nursing — Sub Category *</label><select id="r_es">${opt(EDU, "Select")}</select></div>
-  <label>Passing Institute & Year</label><input id="r_ei">
+  <label style="color:var(--pr);font-weight:700">Educational Qualifications *</label>
+  <div id="eduList"></div>
+  <button type="button" class="s" onclick="addEduEntry()">➕ আরও Qualification যোগ করুন (Add More)</button>
   <label>Email (পাসওয়ার্ড রিকভারির জন্য)</label><input id="r_em" type="email">
   <button class="p" onclick="${byMgr ? "saveNewByMgr()" : ed ? "save()" : "reg()"}">${btnText}</button>
-  <div class="msg">${esc(msg)}</div>
-  <button class="s" onclick="editing=null;addingByManager=false;formPhoto=null;${!me ? "view='login';" : ""}msg='';draw()">${(ed || byMgr) ? "Cancel" : "Back to Login"}</button></div>`;
+  <div id="r_msg" class="msg">${esc(msg)}</div>
+  <button class="s" onclick="editing=null;addingByManager=false;formPhoto=null;resetEduEntries();${!me ? "view='login';" : ""}msg='';draw()">${(ed || byMgr) ? "Cancel" : "Back to Login"}</button></div>`;
 }
 
 function bindFormPhotoPreview() {
@@ -1287,7 +1322,131 @@ function onUpaChange() {
   if (!wrap || !el) return;
   wrap.style.display = (el.tagName === "SELECT" && el.value === "Other") ? "block" : "none";
 }
-function ec() { $("#r_esw").style.display = $("#r_ec").value === "Nursing" ? "block" : "none"; }
+function resetEduEntries() {
+  eduEntries = [{ cat: "", sub: "", customSub: "", info: "" }];
+}
+function eduResolvedSub(e) {
+  const c = (e.cat || "").trim();
+  if (c === "Nursing") return e.sub === "Other" ? (e.customSub || "").trim() : (e.sub || "").trim();
+  if (c === "Other") return (e.customSub || "").trim();
+  return "";
+}
+function eduTitle(e) {
+  const c = (e.cat || "").trim();
+  if (c === "Nursing") {
+    const rs = eduResolvedSub(e);
+    return rs ? "Nursing — " + rs : "";
+  }
+  if (c === "Other") return eduResolvedSub(e);
+  return c;
+}
+function eduFormatted(e) {
+  const t = eduTitle(e);
+  if (!t) return "";
+  const info = (e.info || "").trim().replace(/ \| /g, ", ");
+  return info ? `${t} (${info})` : t;
+}
+function addEduEntry() {
+  eduEntries.push({ cat: "", sub: "", customSub: "", info: "" });
+  renderEduEntries();
+}
+function removeEduEntry(idx) {
+  if (eduEntries.length <= 1) return;
+  eduEntries.splice(idx, 1);
+  renderEduEntries();
+}
+function onEduCatChange(idx, val) {
+  const e = eduEntries[idx];
+  e.cat = val;
+  if (val !== "Nursing") e.sub = "";
+  if (val !== "Other" && !(val === "Nursing" && e.sub === "Other")) e.customSub = "";
+  renderEduEntries();
+}
+function onEduSubChange(idx, val) {
+  const e = eduEntries[idx];
+  e.sub = val;
+  if (val !== "Other") e.customSub = "";
+  renderEduEntries();
+}
+function renderEduEntries() {
+  const box = $("#eduList");
+  if (!box) return;
+  if (!eduEntries.length) resetEduEntries();
+  box.innerHTML = eduEntries.map((e, i) => `
+    <div class="edu-item">
+      <div class="edu-head">
+        <span>${i === 0 ? "মূল শিক্ষাগত যোগ্যতা #1 *" : `অতিরিক্ত যোগ্যতা #${i + 1}`}</span>
+        ${eduEntries.length > 1 ? `<button type="button" class="edu-rm" onclick="removeEduEntry(${i})">মুছুন</button>` : ""}
+      </div>
+      <label>Educational Qualification — Category *</label>
+      <select onchange="onEduCatChange(${i}, this.value)">
+        <option value="">Select</option>
+        ${EDU_CAT.map(c => `<option value="${esc(c)}" ${e.cat === c ? "selected" : ""}>${esc(c)}</option>`).join("")}
+      </select>
+      ${e.cat === "Nursing" ? `
+        <label>Nursing — Sub Category *</label>
+        <select onchange="onEduSubChange(${i}, this.value)">
+          <option value="">Select</option>
+          ${EDU.map(s => `<option value="${esc(s)}" ${e.sub === s ? "selected" : ""}>${esc(s)}</option>`).join("")}
+        </select>
+        ${e.sub === "Other" ? `
+          <label>Custom Nursing Degree / Training লিখুন *</label>
+          <input value="${esc(e.customSub)}" oninput="eduEntries[${i}].customSub=this.value" placeholder="যেমন: MPH, OT/ICU Specialization">
+        ` : ""}
+      ` : e.cat === "Other" ? `
+        <label>Qualification / Degree নাম লিখুন *</label>
+        <input value="${esc(e.customSub)}" oninput="eduEntries[${i}].customSub=this.value" placeholder="যেমন: B.A, B.S.S, MPH, PhD">
+      ` : ""}
+      <label>Passing Institute & Year</label>
+      <input value="${esc(e.info)}" oninput="eduEntries[${i}].info=this.value">
+    </div>
+  `).join("");
+}
+function parseEduSegment(seg, fallbackInfo = "") {
+  const trimmed = (seg || "").trim();
+  if (!trimmed) return { cat: "", sub: "", customSub: "", info: fallbackInfo || "" };
+  let titlePart = trimmed, infoPart = fallbackInfo || "";
+  if (!fallbackInfo && trimmed.endsWith(")")) {
+    let depth = 0, openIdx = -1;
+    for (let i = trimmed.length - 1; i >= 0; i--) {
+      if (trimmed[i] === ")") depth++;
+      else if (trimmed[i] === "(") {
+        depth--;
+        if (depth === 0) { openIdx = i; break; }
+      }
+    }
+    if (openIdx > 0 && trimmed[openIdx - 1] === " ") {
+      titlePart = trimmed.slice(0, openIdx - 1).trim();
+      infoPart = trimmed.slice(openIdx + 1, -1).trim();
+    }
+  }
+  if (titlePart.startsWith("Nursing — ")) {
+    const subRaw = titlePart.slice("Nursing — ".length).trim();
+    if (EDU.includes(subRaw) && subRaw !== "Other") return { cat: "Nursing", sub: subRaw, customSub: "", info: infoPart };
+    return { cat: "Nursing", sub: "Other", customSub: subRaw, info: infoPart };
+  }
+  if (titlePart === "HSC" || titlePart === "SSC") return { cat: titlePart, sub: "", customSub: "", info: infoPart };
+  return { cat: "Other", sub: "", customSub: titlePart, info: infoPart };
+}
+function parseEduEntriesFromUser(u) {
+  const ed = u.education || "", ecVal = (u.eduCat || "").trim(), esVal = (u.eduSub || "").trim(), eiVal = u.eduInfo || "";
+  if (ed.includes(" | ")) {
+    const parts = ed.split(" | ").map(s => parseEduSegment(s));
+    return parts.length ? parts : [{ cat: "", sub: "", customSub: "", info: "" }];
+  }
+  if (ed || ecVal || esVal || eiVal) {
+    if (ecVal === "Nursing") {
+      const subRaw = esVal || (ed.startsWith("Nursing — ") ? ed.slice("Nursing — ".length).trim() : "");
+      if (!subRaw) return [{ cat: "Nursing", sub: "", customSub: "", info: eiVal }];
+      if (EDU.includes(subRaw) && subRaw !== "Other") return [{ cat: "Nursing", sub: subRaw, customSub: "", info: eiVal }];
+      return [{ cat: "Nursing", sub: "Other", customSub: subRaw, info: eiVal }];
+    }
+    if (ecVal === "HSC" || ecVal === "SSC") return [{ cat: ecVal, sub: "", customSub: "", info: eiVal }];
+    if (ecVal === "Other") return [{ cat: "Other", sub: "", customSub: esVal || ed, info: eiVal }];
+    return [parseEduSegment(ed, eiVal)];
+  }
+  return [{ cat: "", sub: "", customSub: "", info: "" }];
+}
 function sv(i, v) {
   const e = $("#r_" + i); if (!e) return;
   v = v || "";
@@ -1319,53 +1478,71 @@ function fill(u) {
   } else {
     sv("up", u.upazila); onUpaChange();
   }
-  sv("ad", u.address); sv("ec", u.eduCat); ec(); sv("es", u.eduSub); sv("ei", u.eduInfo); sv("em", u.email);
+  sv("ad", u.address);
+  eduEntries = parseEduEntriesFromUser(u);
+  renderEduEntries();
+  sv("em", u.email);
 }
 function collect() {
   const g = i => ($("#r_" + i) ? $("#r_" + i).value.trim() : "");
-  const c = g("ec"), s = g("es");
+  const list = eduEntries.length ? eduEntries : [{ cat: "", sub: "", customSub: "", info: "" }];
+  const first = list[0];
   const upEl = $("#r_up");
   const upVal = (upEl && upEl.tagName === "SELECT" && upEl.value === "Other") ? g("up_custom") : g("up");
+  const educationVal = list.length === 1
+    ? eduTitle(first)
+    : list.map(eduFormatted).filter(Boolean).join(" | ");
   return {
     category: g("cat"), name: g("name"), father: g("fa"), mother: g("mo"),
     dob: g("dob"), joinDate: g("jd"), phone: g("ph"), bnmc: g("bn"),
     designation: g("des"), workplace: g("wp"), division: g("dv"),
     district: g("di"), upazila: upVal, address: g("ad"),
-    eduCat: c, eduSub: c === "Nursing" ? s : "",
-    education: c === "Nursing" ? (s ? "Nursing — " + s : "") : c,
-    eduInfo: g("ei"), email: g("em"), photo: formPhoto
+    eduCat: (first.cat || "").trim(),
+    eduSub: eduResolvedSub(first),
+    education: educationVal,
+    eduInfo: list.length === 1 ? (first.info || "").trim() : "",
+    email: g("em"), photo: formPhoto
   };
 }
 function check(d) {
+  const list = eduEntries.length ? eduEntries : [{ cat: "", sub: "", customSub: "", info: "" }];
+  if (!eduTitle(list[0])) return "সব বাধ্যতামূলক তথ্য দিন (education)";
+  if (list.slice(1).some(e => !eduTitle(e))) return "যোগ করা প্রতিটি শিক্ষাগত যোগ্যতার তথ্য পূরণ করুন অথবা অতিরিক্ত ঘরটি মুছুন";
   for (const k of ["category", "name", "father", "mother", "dob", "joinDate", "phone", "bnmc", "designation", "workplace", "division", "district", "upazila", "education"]) {
     if (!d[k]) return "সব বাধ্যতামূলক তথ্য দিন (" + k + ")";
   }
   if (!/^01[3-9]\d{8}$/.test(d.phone)) return "সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন";
   return "";
 }
+function showFormErr(err) {
+  msg = err;
+  const el = $("#r_msg");
+  if (el) el.textContent = err;
+  else draw();
+}
 async function reg() {
-  const d = collect(); msg = check(d); if (msg) return draw();
+  const d = collect(); const err = check(d); if (err) return showFormErr(err);
   await store.load();
-  if (all.some(x => x.phone === d.phone)) { msg = "এই নম্বর আগেই নিবন্ধিত"; return draw(); }
+  if (all.some(x => x.phone === d.phone)) return showFormErr("এই নম্বর আগেই নিবন্ধিত");
   d.prl = prl(d.dob); d.role = "user"; d.status = "pending"; d.mustChange = true;
   d.pw = await H("1234"); d.createdAt = new Date().toISOString();
   await store.set(d.phone, d);
-  formPhoto = null; msg = ""; view = "submitted"; draw();
+  formPhoto = null; resetEduEntries(); msg = ""; view = "submitted"; draw();
 }
 async function saveNewByMgr() {
-  const d = collect(); msg = check(d); if (msg) return draw();
-  if (!canManage(me, d)) { msg = `আপনার নির্ধারিত এলাকা (${scopeLabel(me)}) এর বাইরে নার্স যোগ করা যাবে না।`; return draw(); }
+  const d = collect(); const err = check(d); if (err) return showFormErr(err);
+  if (!canManage(me, d)) return showFormErr(`আপনার নির্ধারিত এলাকা (${scopeLabel(me)}) এর বাইরে নার্স যোগ করা যাবে না।`);
   await store.load();
-  if (all.some(x => x.phone === d.phone)) { msg = "এই নম্বর আগেই নিবন্ধিত"; return draw(); }
+  if (all.some(x => x.phone === d.phone)) return showFormErr("এই নম্বর আগেই নিবন্ধিত");
   d.prl = prl(d.dob); d.role = "user"; d.status = "approved"; d.mustChange = true;
   d.pw = await H("1234"); d.createdAt = new Date().toISOString();
   await store.set(d.phone, d);
-  addingByManager = false; formPhoto = null; msg = "";
+  addingByManager = false; formPhoto = null; resetEduEntries(); msg = "";
   note = "নতুন নার্স সফলভাবে যোগ ও Approve হয়েছে ✅ (Default Password: 1234)";
   draw();
 }
 async function save() {
-  const d = collect(); msg = check(d); if (msg) return draw();
+  const d = collect(); const err = check(d); if (err) return showFormErr(err);
   d.prl = prl(d.dob);
   const u = all.find(x => x.phone === editing);
   if (isMgr(me)) {
@@ -1376,7 +1553,7 @@ async function save() {
     await store.set(u.phone, { ...u, photo: d.photo, pendingEdit: { ...editPayload, requestedAt: new Date().toISOString() } });
     note = "আপনার পরিবর্তনের অনুরোধ Admin এর কাছে পাঠানো হয়েছে। Approve হলে তথ্য আপডেট হবে।";
   }
-  editing = null; formPhoto = null; msg = ""; draw();
+  editing = null; formPhoto = null; resetEduEntries(); msg = ""; draw();
 }
 
 function pwForm() {
@@ -1448,9 +1625,14 @@ function doPrint() {
   $("#pv").innerHTML = $("#pa").innerHTML;
   try { window.print(); } catch (e) { $("#pm").textContent = "এই browser এ print বন্ধ আছে"; }
 }
+function formatEduHtml(x) {
+  const ed = x.education || "";
+  if (ed.includes(" | ")) return ed.split(" | ").map(s => "• " + esc(s)).join("<br>🎓 ");
+  return esc(ed) + (x.eduInfo ? " (" + esc(x.eduInfo) + ")" : "");
+}
 function profView(x, extra = "") {
   return `<div class="card">${x.photo ? `<img src="${x.photo}" alt="" class="avatar" style="float:right">` : ""}<b>${esc(x.name)}</b> <span class="tag">${esc(x.designation)}</span><br><span class="tag">${esc(x.category)}</span>${x.status && x.status !== "approved" ? `<span class="tag" style="background:#fef3c7;color:#92400e">${esc(x.status)}</span>` : ""}
-  <div class="mu" style="margin-top:6px">📞 <a href="tel:${esc(x.phone)}">${esc(x.phone)}</a> · BNMC: ${esc(x.bnmc)}<br>🏥 ${esc(x.workplace)}<br>📍 ${esc(x.upazila)}, ${esc(x.district)}, ${esc(x.division)}${x.address ? " — " + esc(x.address) : ""}<br>🎓 ${esc(x.education)}${x.eduInfo ? " (" + esc(x.eduInfo) + ")" : ""}<br>Father: ${esc(x.father)} · Mother: ${esc(x.mother)}<br>DOB: ${esc(x.dob)} · <b>PRL: ${esc(prl(x.dob))}</b><br>Joining Date: ${esc(x.joinDate || "—")}${x.email ? "<br>✉️ " + esc(x.email) : ""}</div>${extra}</div>`;
+  <div class="mu" style="margin-top:6px">📞 <a href="tel:${esc(x.phone)}">${esc(x.phone)}</a> · BNMC: ${esc(x.bnmc)}<br>🏥 ${esc(x.workplace)}<br>📍 ${esc(x.upazila)}, ${esc(x.district)}, ${esc(x.division)}${x.address ? " — " + esc(x.address) : ""}<br>🎓 ${formatEduHtml(x)}<br>Father: ${esc(x.father)} · Mother: ${esc(x.mother)}<br>DOB: ${esc(x.dob)} · <b>PRL: ${esc(prl(x.dob))}</b><br>Joining Date: ${esc(x.joinDate || "—")}${x.email ? "<br>✉️ " + esc(x.email) : ""}</div>${extra}</div>`;
 }
 
 function meView() {
@@ -1540,7 +1722,7 @@ function allView(scopedUsers) {
 
   setTimeout(() => { if (editingMgrId) fillMgrForm(all.find(x => x.phone === editingMgrId)); }, 0);
 
-  return `<button class="p" style="margin-top:0;margin-bottom:12px" onclick="addingByManager=true;editing=null;formPhoto=null;msg='';draw()">➕ নতুন নার্স যোগ করুন (Add Nurse)</button>` +
+  return `<button class="p" style="margin-top:0;margin-bottom:12px" onclick="addingByManager=true;editing=null;formPhoto=null;resetEduEntries();msg='';draw()">➕ নতুন নার্স যোগ করুন (Add Nurse)</button>` +
     adminControls +
     `<div class="card">${me.role !== "admin" ? `<div class="mu"><b>এলাকা:</b> ${esc(scopeLabel(me))}</div>` : ""}<b>মোট নিবন্ধিত:</b> ${scopedUsers.length} · <b>Approved:</b> ${ap.length}<br>` +
     Object.keys(CAT).map(c => `${c}: ${ap.filter(x => x.category === c).length}`).join("<br>") + `</div>` +

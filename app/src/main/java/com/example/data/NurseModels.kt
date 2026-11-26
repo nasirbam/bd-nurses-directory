@@ -135,6 +135,39 @@ data class NurseRecord(
   }
 }
 
+data class EducationEntry(
+  val cat: String = "",
+  val sub: String = "",
+  val customSub: String = "",
+  val info: String = "",
+) {
+  fun resolvedSub(): String =
+    when (cat.trim()) {
+      "Nursing" -> if (sub.trim() == "Other") customSub.trim() else sub.trim()
+      "Other" -> customSub.trim()
+      else -> ""
+    }
+
+  fun title(): String {
+    val c = cat.trim()
+    return when (c) {
+      "Nursing" -> {
+        val rs = resolvedSub()
+        if (rs.isNotBlank()) "Nursing — $rs" else ""
+      }
+      "Other" -> resolvedSub()
+      else -> c
+    }
+  }
+
+  fun formattedWithInfo(): String {
+    val t = title()
+    if (t.isBlank()) return ""
+    val cleanInfo = info.trim().replace(" | ", ", ")
+    return if (cleanInfo.isNotBlank()) "$t ($cleanInfo)" else t
+  }
+}
+
 data class NurseFormDraft(
   val category: String = "",
   val name: String = "",
@@ -150,18 +183,29 @@ data class NurseFormDraft(
   val district: String = "",
   val upazila: String = "",
   val address: String = "",
-  val eduCat: String = "",
-  val eduSub: String = "",
-  val eduInfo: String = "",
+  val educationEntries: List<EducationEntry> = listOf(EducationEntry()),
   val email: String = "",
   val photo: String? = null,
 ) {
+  private val effectiveEntries: List<EducationEntry>
+    get() = educationEntries.ifEmpty { listOf(EducationEntry()) }
+
+  val computedEduCat: String
+    get() = effectiveEntries.first().cat.trim()
+
+  val computedEduSub: String
+    get() = effectiveEntries.first().resolvedSub()
+
+  val computedEduInfo: String
+    get() = if (effectiveEntries.size == 1) effectiveEntries.first().info.trim() else ""
+
   val computedEducation: String
-    get() =
-      when (eduCat.trim()) {
-        "Nursing" -> if (eduSub.isNotBlank()) "Nursing — ${eduSub.trim()}" else ""
-        else -> eduCat.trim()
-      }
+    get() {
+      val list = effectiveEntries
+      if (list.size == 1) return list.first().title()
+      return list.mapNotNull { it.formattedWithInfo().takeIf { s -> s.isNotBlank() } }
+        .joinToString(" | ")
+    }
 
   fun validate(): String? {
     val required =
@@ -179,10 +223,13 @@ data class NurseFormDraft(
         "division" to division,
         "district" to district,
         "upazila" to upazila,
-        "education" to computedEducation,
+        "education" to effectiveEntries.first().title(),
       )
     for ((key, value) in required) {
       if (value.isBlank()) return "সব বাধ্যতামূলক তথ্য দিন ($key)"
+    }
+    if (effectiveEntries.drop(1).any { it.title().isBlank() }) {
+      return "যোগ করা প্রতিটি শিক্ষাগত যোগ্যতার তথ্য পূরণ করুন অথবা অতিরিক্ত ঘরটি মুছে দিন"
     }
     if (!DirectoryConstants.isValidBdPhone(phone)) {
       return "সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন"
@@ -191,8 +238,75 @@ data class NurseFormDraft(
   }
 }
 
-fun NurseRecord.toFormDraft(): NurseFormDraft =
-  NurseFormDraft(
+private fun parseEducationSegment(segment: String, fallbackInfo: String = ""): EducationEntry {
+  val trimmed = segment.trim()
+  if (trimmed.isBlank()) return EducationEntry(info = fallbackInfo)
+
+  var titlePart = trimmed
+  var infoPart = fallbackInfo
+
+  if (fallbackInfo.isBlank() && trimmed.endsWith(")")) {
+    var depth = 0
+    var openIdx = -1
+    for (i in trimmed.length - 1 downTo 0) {
+      when (trimmed[i]) {
+        ')' -> depth++
+        '(' -> {
+          depth--
+          if (depth == 0) {
+            openIdx = i
+            break
+          }
+        }
+      }
+    }
+    if (openIdx > 0 && trimmed[openIdx - 1] == ' ') {
+      titlePart = trimmed.substring(0, openIdx - 1).trim()
+      infoPart = trimmed.substring(openIdx + 1, trimmed.length - 1).trim()
+    }
+  }
+
+  return when {
+    titlePart.startsWith("Nursing — ") -> {
+      val subRaw = titlePart.removePrefix("Nursing — ").trim()
+      if (subRaw in DirectoryConstants.NURSING_SUB_CATEGORIES && subRaw != "Other") {
+        EducationEntry(cat = "Nursing", sub = subRaw, info = infoPart)
+      } else {
+        EducationEntry(cat = "Nursing", sub = "Other", customSub = subRaw, info = infoPart)
+      }
+    }
+    titlePart == "HSC" || titlePart == "SSC" -> EducationEntry(cat = titlePart, info = infoPart)
+    else -> EducationEntry(cat = "Other", customSub = titlePart, info = infoPart)
+  }
+}
+
+fun NurseRecord.toFormDraft(): NurseFormDraft {
+  val parsedEntries =
+    if (education.contains(" | ")) {
+      education.split(" | ").map { parseEducationSegment(it) }.ifEmpty { listOf(EducationEntry()) }
+    } else if (education.isNotBlank() || eduCat.isNotBlank() || eduSub.isNotBlank() || eduInfo.isNotBlank()) {
+      val single =
+        when (eduCat.trim()) {
+          "Nursing" -> {
+            val subRaw = eduSub.trim().ifBlank { education.removePrefix("Nursing — ").trim() }
+            if (subRaw.isBlank()) {
+              EducationEntry(cat = "Nursing", info = eduInfo)
+            } else if (subRaw in DirectoryConstants.NURSING_SUB_CATEGORIES && subRaw != "Other") {
+              EducationEntry(cat = "Nursing", sub = subRaw, info = eduInfo)
+            } else {
+              EducationEntry(cat = "Nursing", sub = "Other", customSub = subRaw, info = eduInfo)
+            }
+          }
+          "HSC", "SSC" -> EducationEntry(cat = eduCat.trim(), info = eduInfo)
+          "Other" -> EducationEntry(cat = "Other", customSub = eduSub.trim().ifBlank { education }, info = eduInfo)
+          else -> parseEducationSegment(education, fallbackInfo = eduInfo)
+        }
+      listOf(single)
+    } else {
+      listOf(EducationEntry())
+    }
+
+  return NurseFormDraft(
     category = category,
     name = name,
     father = father,
@@ -207,12 +321,11 @@ fun NurseRecord.toFormDraft(): NurseFormDraft =
     district = district,
     upazila = upazila,
     address = address,
-    eduCat = eduCat,
-    eduSub = eduSub,
-    eduInfo = eduInfo,
+    educationEntries = parsedEntries,
     email = email,
     photo = photo,
   )
+}
 
 data class EmailJsConfig(
   val serviceId: String = "",

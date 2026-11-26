@@ -663,7 +663,7 @@ object DirectoryConstants {
 
   val ALL_DESIGNATIONS: List<String> = CATEGORIES.values.flatten().distinct()
 
-  val EDU_CATEGORIES: List<String> = listOf("Nursing", "HSC", "SSC")
+  val EDU_CATEGORIES: List<String> = listOf("Nursing", "HSC", "SSC", "Other")
 
   val NURSING_SUB_CATEGORIES: List<String> =
     listOf(

@@ -21,8 +21,10 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Visibility
@@ -37,6 +39,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -59,6 +62,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.data.DirectoryConstants
+import com.example.data.EducationEntry
 import com.example.data.NurseFormDraft
 import com.example.ui.AuthView
 import com.example.ui.DirectoryUiState
@@ -811,37 +815,151 @@ fun NurseFormCard(
         modifier = Modifier.fillMaxWidth().testTag("form_address_input"),
       )
 
-      DropdownField(
-        label = "Educational Qualification — Category *",
-        selectedValue = draft.eduCat,
-        placeholder = "Select",
-        options = DirectoryConstants.EDU_CATEGORIES,
-        onSelected = { ec ->
-          onDraftChange {
-            it.copy(eduCat = ec, eduSub = if (ec == "Nursing") it.eduSub else "")
+      val eduEntries = draft.educationEntries.ifEmpty { listOf(EducationEntry()) }
+      val updateEntry: (Int, EducationEntry) -> Unit = { idx, updatedEntry ->
+        onDraftChange { cur ->
+          val base = cur.educationEntries.ifEmpty { listOf(EducationEntry()) }.toMutableList()
+          if (idx in base.indices) {
+            base[idx] = updatedEntry
           }
-        },
-        testTag = "form_edu_category_dropdown",
-      )
-
-      if (draft.eduCat == "Nursing") {
-        DropdownField(
-          label = "Nursing — Sub Category *",
-          selectedValue = draft.eduSub,
-          placeholder = "Select",
-          options = DirectoryConstants.NURSING_SUB_CATEGORIES,
-          onSelected = { sub -> onDraftChange { it.copy(eduSub = sub) } },
-          testTag = "form_edu_sub_dropdown",
-        )
+          cur.copy(educationEntries = base)
+        }
       }
 
-      OutlinedTextField(
-        value = draft.eduInfo,
-        onValueChange = { v -> onDraftChange { it.copy(eduInfo = v) } },
-        label = { Text("Passing Institute & Year") },
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth().testTag("form_edu_info_input"),
+      Text(
+        text = "Educational Qualifications *",
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.primary,
       )
+
+      eduEntries.forEachIndexed { index, entry ->
+        Surface(
+          shape = RoundedCornerShape(12.dp),
+          color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+          border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)),
+          modifier = Modifier.fillMaxWidth(),
+        ) {
+          Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+          ) {
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically,
+            ) {
+              Text(
+                text =
+                  if (index == 0) "মূল শিক্ষাগত যোগ্যতা #1 *"
+                  else "অতিরিক্ত যোগ্যতা #${index + 1}",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+              )
+              if (eduEntries.size > 1) {
+                IconButton(
+                  onClick = {
+                    onDraftChange { cur ->
+                      val list = cur.educationEntries.toMutableList()
+                      if (index in list.indices && list.size > 1) {
+                        list.removeAt(index)
+                      }
+                      cur.copy(educationEntries = list)
+                    }
+                  },
+                  modifier = Modifier.size(36.dp).testTag("remove_edu_button_$index"),
+                ) {
+                  Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "Remove qualification ${index + 1}",
+                    tint = MaterialTheme.colorScheme.error,
+                  )
+                }
+              }
+            }
+
+            DropdownField(
+              label = "Educational Qualification — Category *",
+              selectedValue = entry.cat,
+              placeholder = "Select",
+              options = DirectoryConstants.EDU_CATEGORIES,
+              onSelected = { ec ->
+                updateEntry(
+                  index,
+                  entry.copy(
+                    cat = ec,
+                    sub = if (ec == "Nursing") entry.sub else "",
+                    customSub = if (ec == "Other" || (ec == "Nursing" && entry.sub == "Other")) entry.customSub else "",
+                  ),
+                )
+              },
+              testTag = if (index == 0) "form_edu_category_dropdown" else "form_edu_category_dropdown_$index",
+            )
+
+            if (entry.cat == "Nursing") {
+              DropdownField(
+                label = "Nursing — Sub Category *",
+                selectedValue = entry.sub,
+                placeholder = "Select",
+                options = DirectoryConstants.NURSING_SUB_CATEGORIES,
+                onSelected = { sub ->
+                  updateEntry(
+                    index,
+                    entry.copy(
+                      sub = sub,
+                      customSub = if (sub == "Other") entry.customSub else "",
+                    ),
+                  )
+                },
+                testTag = if (index == 0) "form_edu_sub_dropdown" else "form_edu_sub_dropdown_$index",
+              )
+              if (entry.sub == "Other") {
+                OutlinedTextField(
+                  value = entry.customSub,
+                  onValueChange = { v -> updateEntry(index, entry.copy(customSub = v)) },
+                  label = { Text("Custom Nursing Degree / Training লিখুন *") },
+                  placeholder = { Text("যেমন: MPH, OT/ICU Specialization") },
+                  singleLine = true,
+                  modifier = Modifier.fillMaxWidth().testTag("form_edu_custom_sub_$index"),
+                )
+              }
+            } else if (entry.cat == "Other") {
+              OutlinedTextField(
+                value = entry.customSub,
+                onValueChange = { v -> updateEntry(index, entry.copy(customSub = v)) },
+                label = { Text("Qualification / Degree নাম লিখুন *") },
+                placeholder = { Text("যেমন: B.A, B.S.S, MPH, PhD") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().testTag("form_edu_custom_cat_$index"),
+              )
+            }
+
+            OutlinedTextField(
+              value = entry.info,
+              onValueChange = { v -> updateEntry(index, entry.copy(info = v)) },
+              label = { Text("Passing Institute & Year") },
+              singleLine = true,
+              modifier =
+                Modifier.fillMaxWidth()
+                  .testTag(if (index == 0) "form_edu_info_input" else "form_edu_info_input_$index"),
+            )
+          }
+        }
+      }
+
+      OutlinedButton(
+        onClick = {
+          onDraftChange { cur ->
+            val base = cur.educationEntries.ifEmpty { listOf(EducationEntry()) }
+            cur.copy(educationEntries = base + EducationEntry())
+          }
+        },
+        modifier = Modifier.fillMaxWidth().height(48.dp).testTag("add_more_edu_button"),
+      ) {
+        Icon(Icons.Filled.Add, contentDescription = null)
+        Spacer(modifier = Modifier.size(6.dp))
+        Text("আরও Qualification যোগ করুন (Add More)")
+      }
 
       OutlinedTextField(
         value = draft.email,
